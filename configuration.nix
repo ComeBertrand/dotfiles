@@ -114,8 +114,16 @@
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
       firefox
-    #  thunderbird
     ];
+  };
+
+  home-manager.users.cbertrand = { pkgs, ... }: {
+    home.stateVersion = "23.05";
+    home.file = {
+      ".config/git/config" = {
+        source = ./sources/gitconfig.conf;
+      };
+    };
   };
 
   # Allow unfree packages
