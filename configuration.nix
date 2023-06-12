@@ -127,6 +127,10 @@
       ".Xresources" = {
         source = ./sources/xresources;
       };
+      ".local/bin" = {
+        source = ./sources/scripts;
+        recursive = true;
+      };
     };
   };
 
