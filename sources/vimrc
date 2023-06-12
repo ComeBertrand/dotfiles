@@ -1,0 +1,269 @@
+" Basic options
+
+set encoding=utf-8
+set fileencoding=utif-8
+set nocompatible
+
+" Avoid disturbing beeps on error
+set belloff=all
+
+" Enable syntax highlighting
+syntax enable
+
+" Load filetype specific indent and plugins
+filetype indent on
+filetype plugin on
+
+" Use hidden buffers
+set hidden
+
+" Autoread written files as long as there aren't any unsaved changes
+set autoread
+
+" Do not wrap lines but improve horizonal scrolling
+set nowrap
+set sidescroll=1
+set sidescrolloff=15
+
+" Always show some lines above and below the cursor
+set scrolloff=15
+
+" Always show status line
+set laststatus=2
+
+" Show cursor position on bottom-right corner
+set ruler
+
+" Show line number on curretn line and relative number elsewhere
+set number
+set relativenumber
+
+" Highlight current line
+set cursorline
+
+" Highlight search result
+set hlsearch
+
+" Perform incremental search
+set incsearch
+
+" Ignore case by default except if search has upper case character
+" Use \C to search with case sensitivity, \c to search without it
+set ignorecase
+set smartcase
+
+" Highlight matching brackets
+set showmatch
+
+" Tabs
+set tabstop=4
+set softtabstop=4
+set shiftwidth=4
+set expandtab
+
+" Store undo in file
+set undofile
+set undodir=~/.vim/tmp.undo//
+if !isdirectory(expand(&undodir))
+    call mkdir(expand(&undodir), "p")
+endif
+
+" Open vertical split on the right, horizontal below
+set splitright
+set splitbelow
+
+" Wildmenu completion
+" TODEL?
+set wildmenu
+set wildmode=full
+
+" Files ignored in search
+set wildignore+=.git,tags,.sw?
+set wildignore+=*.pyc
+set wildignore+=**/build/**
+set wildignore+=**node_modules/**,**/bower_components/**,**/dist/**
+set wildignore+=package_lock.json
+set wildignore+=*.jpg,*.bmp,*.gif,*.png,*.jpeg
+
+" Plugins
+" To install everything run :PlugInstall
+" To update run :PlugUpdate
+call plug#begin()
+
+" Pretty line below
+Plug 'itchyny/lightline.vim'
+
+" Smart navigation between tmux and vim panes
+Plug 'christoomey/vim-tmux-navigator'
+Plug 'benmills/vimux'
+
+" Use ranger as file explorer
+Plug 'francoiscabrol/ranger.vim'
+
+" Git
+Plug 'tpope/vim-fugitive'
+
+" Ansynchronous build and test dispatcher
+Plug 'tpope/vim-dispatch'
+
+" Color matching parentheses
+Plug 'junegunn/rainbow_parentheses.vim'
+
+" Tagbar
+Plug 'majutsushi/tagbar'
+Plug 'craigemery/vim-autotag'
+
+" Fuzzy finder
+Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all'}
+Plug 'junegunn/fzf.vim'
+
+" Typescript syntax
+Plug 'HerringtonDarkholme/yats.vim'
+
+" Highlight colors in CSS
+Plug 'vim-scripts/colorizer'
+
+" Theme
+Plug 'morhetz/gruvbox'
+
+" DB
+Plug 'tpope/vim-dadbod'
+
+" Linting
+Plug 'w0rp/ale'
+
+" Rust management
+Plug 'rust-lang/rust.vim'
+
+call plug#end()
+
+" Colorscheme
+colorscheme gruvbox
+set bg=dark
+
+" Disable vim-dispatch default maps because I don't use them
+let g:dispatch_no_maps = 1
+
+" Fix gutter width
+let g:ale_sign_column_always = 1
+let g:ale_echo_msg_format = '[%linter%] %s'
+
+" Remove weird underlined words
+let g:ale_set_highlights = 0
+
+let g:ale_sign_error = '•'
+let g:ale_sign_warning = '•'
+
+highlight ALEErrorSign ctermfg=9 ctermbg=18
+highlight ALEWarningSigne ctermfg=11 ctermbg=18
+
+" Ranger Disable default key mapping
+let g:ranger_map_keys = 0
+nnoremap <leader>n :Ranger<CR>
+let g:ranger_replace_netrw = 1
+
+" Key bindings
+
+let mapleader="\\"
+
+nnoremap <C-J> <C-W><C-J>
+nnoremap <C-K> <C-W><C-K>
+nnoremap <C-L> <C-W><C-L>
+nnoremap <C-H> <C-W><C-H>
+
+" Window size management
+nnoremap <C-N> <C-W>_
+nnoremap <C-N><C-N> <C-W>=
+
+" Replace
+nnoremap S diw"0P
+
+" Open tagbar
+nnoremap <leader>s :TagbarToggle<CR>
+
+" Fuzzy search
+nnoremap <leader>f :Files<CR>
+nnoremap <leader>t : :Tags<CR>
+nnoremap ; :Buffers<CR>
+
+" Remove trailing whitespace on save
+autocmd BufWritePre * :%s/\s\+$//e
+
+" Turn off search highlight
+nnoremap <leader><space> :nohlsearch<CR>
+
+" Tags
+nnoremap <leader>b <C-]>
+nnoremap <leader>T :!ctags -R . --exclude=.git --exclude=node_modules --exclude=test --exclude=.mypy_cache --exclude=.gitlab<CR>
+
+" Remove line below the lightline
+set noshowmode
+let g:lightline = {
+     \ 'colorscheme': 'wombat',
+     \ 'active': {
+     \   'left': [ [ 'mode', 'paste' ],
+     \             [ 'gitbranch', 'readonly', 'filename', 'modified' ] ]
+     \ },
+     \ 'component_function': {
+     \   'gitbranch': 'FugitiveHead'
+     \ },
+     \ }
+
+" Python
+au Filetype txt setlocal colorcolumn=80 textwidth=80
+
+augroup ft_python
+    au!
+
+    " Set folding preferences
+    au FileType python setlocal foldmethod=indent nofoldenable foldcolumn=0 foldnestmax=10 foldlevel=10
+
+    " Highlight flake8 max-line-length and set text width to allow automatic
+    " line wrapping
+    au Filetype python setlocal colorcolumn=120 textwidth=120
+
+    " Python breakpoint
+    autocmd FileType python nnoremap <buffer> <leader>x Oimport pudb; pudb.set_trace()<esc>
+
+    if executable('black')
+	    autocmd FileType python set formatprg=black\ --quiet\ -
+    endif
+augroup END
+
+command! DBsp :DB g:db
+
+function CastRoot(...)
+	if a:0 == 0
+		return ""
+	else
+		return "".expand(a:1)."/"
+	endif
+endfunction
+
+function SmartGrep(...)
+	if a:0 == 0
+		echo "Need at least an argument"
+		return
+	else
+		if a:0 == 1
+			return 'noautocmd vimgrep /'.expand(a:1).'/gj **/*.'expand('%:e').''
+		else:
+			return 'noautocmd vimgrep /'.expand(a:1).'/gj '.expand(a:2).'/**/*.'.expand('%:e').''
+		endif
+	endif
+endfunction
+
+command! -nargs=+ SG :execute SmartGrep(<f-args>) | copen
+
+command! -nargs=? AG :execute 'noautocmd vimgrep /'.expand('<cword>').'/gj '.expand(CastRoot(<f-args>)).'**/*.'.expand('%:e').'' | copen
+
+" Auto format rust files on save
+let g:rustfmt_autosave = 1
+" Force cargo check
+let g:rust_cargo_avoid_whole_workspace = 0
+
+if exists("$EXTRA_VIM")
+    for path in split($EXTRA_VIM, ':')
+	    exec "source ".path
+    endfor
+endif

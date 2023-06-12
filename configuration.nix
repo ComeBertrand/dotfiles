@@ -115,6 +115,7 @@
     packages = with pkgs; [
       firefox
       git
+      tmux
     ];
   };
 
@@ -130,6 +131,27 @@
       ".local/bin" = {
         source = ./sources/scripts;
         recursive = true;
+      };
+      ".vimrc" = {
+        source = ./sources/vimrc;
+      };
+      ".bashrc" = {
+        source = ./sources/bashrc.sh;
+      };
+      ".bash_profile" = {
+        source = ./sources/bash_profile.sh;
+      };
+      ".bash_prompt" = {
+        source = ./sources/bash_prompt.sh;
+      };
+      ".path" = {
+        source = ./sources/path.sh;
+      };
+      ".tmux.conf" = {
+        source = ./sources/tmux.conf;
+      };
+      ".aliases" = {
+        source = ./sources/aliases.sh;
       };
     };
   };
