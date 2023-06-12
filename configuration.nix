@@ -114,6 +114,7 @@
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
       firefox
+      git
     ];
   };
 
@@ -122,6 +123,9 @@
     home.file = {
       ".config/git/config" = {
         source = ./sources/gitconfig.conf;
+      };
+      ".Xresources" = {
+        source = ./sources/xresources;
       };
     };
   };
@@ -134,9 +138,16 @@
   environment.systemPackages = with pkgs; [
      vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
      wget
-     git
+     rxvt_unicode
   ];
   environment.variables.EDITOR = "vim";
+
+  # Terminal fonts, chose the one you prefer
+  fonts.fonts = with pkgs; [
+    hermit
+    source-code-pro
+    terminus_font
+  ];
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
