@@ -115,7 +115,8 @@
     packages = with pkgs; [
       firefox
       git
-      tmux
+      tmux  # terminal multiplexer
+      ranger  # file manager
     ];
   };
 
