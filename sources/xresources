@@ -29,7 +29,7 @@
 !###############
 ! URxvt Settings
 !###############
-URxvt.font: xft:Hermit Light:size=10
+URxvt.font: xft:Hermit Light:size=12
 URxvt.scrollBar: false
 URxvt.internalBorder: 10
 URxvt.foreground: FOREGROUND
