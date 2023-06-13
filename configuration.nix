@@ -126,6 +126,9 @@
       ".config/git/config" = {
         source = ./sources/gitconfig.conf;
       };
+      ".config/i3/config" = {
+        source = ./sources/i3config.conf;
+      };
       ".Xresources" = {
         source = ./sources/xresources;
       };
