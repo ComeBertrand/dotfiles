@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+function screenz() {
+    if xrandr --current | grep -q "$1 connected" ; then
+        xrandr --output $1 --auto --$2 eDP-1
+    else
+        if xrandr --listactivemonitors | grep -q $1; then
+            xrandr --output $1 --off
+        fi
+    fi
+}
+
+screenz DP-3-1 left-of
+screenz DP-3-2 left-of
+screenz DP-4-1 right-of
+screenz DP-4-2 right-of
