@@ -107,16 +107,21 @@
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
+  # Enable docker
+  virtualisation.docker.enable = true;
+
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.cbertrand = {
     isNormalUser = true;
     description = "cbertrand";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [ "networkmanager" "wheel" "docker" ];
     packages = with pkgs; [
       firefox
       git
       tmux  # terminal multiplexer
       ranger  # file manager
+      docker-compose  # enable composing of containers
+      slack  # communication platform
     ];
   };
 
