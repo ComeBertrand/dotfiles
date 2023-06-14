@@ -124,6 +124,7 @@
       slack  # communication platform
       python311  # Python programming language
       python311Packages.pip  # Pip
+      pew  # Manage python venv
     ];
   };
 

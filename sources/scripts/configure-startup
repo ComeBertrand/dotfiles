@@ -1,0 +1,12 @@
+# Setup pip conf file
+# This file must be populated with extra-index-url with token
+if [ ! -d "~/.config/pip" ]; then
+    mkdir ~/.config/pip
+fi
+touch ~/.config/pip/pip.conf
+
+# Setup npm rc file that needs to be populated with registry url and token
+touch ~/.npmrc
+
+# Create .virtualenvs directory for pew
+mkdir .virtualenvs

@@ -88,3 +88,6 @@ if ! shopt -oq posix; then
         . /etc/bash_completion
     fi
 fi
+
+# Pew source command
+source "$(pew shell_config)"
