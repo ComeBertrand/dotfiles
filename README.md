@@ -1,3 +1,3 @@
 # Manual things to do
-* Add ~/.config/pip/pip.conf with extra-index-url that contains token
-* Add ~/.npmrc with registry tokens
+
+Run `configure-startup` and fill the base configuration files (`.config/pip/pip.conf`, `.npmrc`)
