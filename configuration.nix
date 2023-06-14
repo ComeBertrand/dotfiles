@@ -122,6 +122,8 @@
       ranger  # file manager
       docker-compose  # enable composing of containers
       slack  # communication platform
+      python311  # Python programming language
+      python311Packages.pip  # Pip
     ];
   };
 
