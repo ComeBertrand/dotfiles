@@ -128,6 +128,7 @@
       universal-ctags  # Used for tag generation by vim
       dunst  # Notification-daemon
       htop  # Process manager
+      kubectl  # Manage kubernetes cluster
     ];
   };
 
