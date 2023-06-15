@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
 # Call this in a new git repo to add default files to be excluded
 
+EXCLUDE_PATH=$1/.git/info/exclude
+
 # Direnv configuration
-echo "shell.nix" >> .git/info/exclude
-echo ".envrc" >> ./git/info/exclude
+echo "shell.nix" >> $EXCLUDE_PATH
+echo ".envrc" >> $EXCLUDE_PATH
 
 # Virtualenvs (python)
-echo "./venv/*" >> .git/info/exclude
+echo "./venv/*" >> $EXCLUDE_PATH
 
 # Vim buffers
-echo "*.swp" >> .git/info/exclude
-echo "*.swo" >> .git/info/exclude
+echo "*.swp" >> $EXCLUDE_PATH
+echo "*.swo" >> $EXCLUDE_PATH
 
 # Ctags generated tags
-echo "tags" >> .git/info/exclude
-echo "tags.safe" >> .git/info/exclude
+echo "tags" >> $EXCLUDE_PATH
+echo "tags.safe" >> $EXCLUDE_PATH
