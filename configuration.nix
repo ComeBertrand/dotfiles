@@ -133,25 +133,36 @@
   home-manager.users.cbertrand = { pkgs, ... }: {
     home.stateVersion = "23.05";
     home.file = {
+      # Git config (email, ...)
       ".config/git/config" = {
         source = ./sources/gitconfig.conf;
       };
+      # i3 configuration
       ".config/i3/config" = {
         source = ./sources/i3config.conf;
       };
+      # Direnv functions (auto venv for python, ...)
       ".config/direnv/direnvrc" = {
         source = ./sources/direnvrc.sh;
       };
+      # Custom nixpkgs config
+      ".config/nixpkgs/config.nix" = {
+        source = ./sources/config.nix;
+      };
+      # X configs (colors + URxvt conf)
       ".Xresources" = {
         source = ./sources/xresources;
       };
+      # Scripts to make available
       ".local/bin" = {
         source = ./sources/scripts;
         recursive = true;
       };
+      # Vim conf
       ".vimrc" = {
         source = ./sources/vimrc;
       };
+      # Bash configuration files
       ".bashrc" = {
         source = ./sources/bashrc.sh;
       };
@@ -164,17 +175,23 @@
       ".path" = {
         source = ./sources/path.sh;
       };
-      ".tmux.conf" = {
-        source = ./sources/tmux.conf;
-      };
       ".aliases" = {
         source = ./sources/aliases.sh;
+      };
+      # Tmux conf
+      ".tmux.conf" = {
+        source = ./sources/tmux.conf;
       };
     };
   };
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
+
+  # Allowed unsecure packages
+  nixpkgs.config.permittedInsecurePackages = [
+    "nodejs-14.21.3"  # Still in use in old projects
+  ];
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
