@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Call this in a new git repo to add default files to be excluded
+
+# Direnv configuration
+echo "shell.nix" >> .git/info/exclude
+echo ".envrc" >> ./git/info/exclude
+
+# Virtualenvs (python)
+echo "./venv/*" >> .git/info/exclude
+
+# Vim buffers
+echo "*.swp" >> .git/info/exclude
+echo "*.swo" >> .git/info/exclude
+
+# Ctags generated tags
+echo "tags" >> .git/info/exclude
+echo "tags.safe" >> .git/info/exclude

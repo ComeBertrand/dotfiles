@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Setup pip conf file
 # This file must be populated with extra-index-url with token
 if [ ! -d "~/.config/pip" ]; then
