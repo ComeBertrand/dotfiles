@@ -126,6 +126,7 @@
       nix-direnv  # Use nix-shell with direnv
       python310  # So that I can have an interactive python
       universal-ctags  # Used for tag generation by vim
+      dunst  # Notification-daemon
     ];
   };
 

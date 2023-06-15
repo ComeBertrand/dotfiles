@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+if setxkbmap -query | grep layout | grep -q us ; then
+    setxkbmap fr
+else
+    setxkbmap us
+fi
