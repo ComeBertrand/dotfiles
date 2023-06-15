@@ -116,15 +116,16 @@
     description = "cbertrand";
     extraGroups = [ "networkmanager" "wheel" "docker" ];
     packages = with pkgs; [
-      firefox
-      git
+      firefox  # browser
+      git  # source control
       tmux  # terminal multiplexer
       ranger  # file manager
       docker-compose  # enable composing of containers
       slack  # communication platform
-      python311  # Python programming language
-      python311Packages.pip  # Pip
-      pew  # Manage python venv
+      direnv  # Custom virtualenvs in folders
+      nix-direnv  # Use nix-shell with direnv
+      python310  # So that I can have an interactive python
+      universal-ctags  # Used for tag generation by vim
     ];
   };
 
@@ -136,6 +137,9 @@
       };
       ".config/i3/config" = {
         source = ./sources/i3config.conf;
+      };
+      ".config/direnv/direnvrc" = {
+        source = ./sources/direnvrc.sh;
       };
       ".Xresources" = {
         source = ./sources/xresources;

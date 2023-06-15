@@ -8,5 +8,4 @@ touch ~/.config/pip/pip.conf
 # Setup npm rc file that needs to be populated with registry url and token
 touch ~/.npmrc
 
-# Create .virtualenvs directory for pew
-mkdir .virtualenvs
+echo "Fill .config/pip/pip.conf and .npmrc with registry urls and tokens"

@@ -89,5 +89,5 @@ if ! shopt -oq posix; then
     fi
 fi
 
-# Pew source command
-source "$(pew shell_config)"
+# Setup direnv hook
+eval "$(direnv hook bash)"
