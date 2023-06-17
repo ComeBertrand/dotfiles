@@ -7,10 +7,23 @@ Install following extensions:
 - ghostery
 - uBlock origin
 
-## Work related files
-Run `configure-startup` and fill the base configuration files (`.config/pip/pip.conf`, `.npmrc`)
+## Commands
 
-TBD
+### setexclude
 
-## Git repositories
-Run `init-git` in new git repo to configure the `.git/info/exclude` for custom files
+Run `setexclude` in new git repo to configure the `.git/info/exclude` for custom files
+
+
+### screenz
+
+Run `screenz` to automatically set monitors
+
+
+### startdm
+
+Run `startdm` at startup to start the Display Manager
+
+
+### switchkb
+
+Run `switchkb` to switch between US and FR keyboard layout
