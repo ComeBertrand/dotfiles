@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Call this in a new git repo to add default files to be excluded
 
-EXCLUDE_PATH=$1/.git/info/exclude
+EXCLUDE_PATH=$PWD/.git/info/exclude
 
 # Direnv configuration
 echo "shell.nix" >> $EXCLUDE_PATH

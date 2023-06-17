@@ -129,6 +129,8 @@
       dunst  # Notification-daemon
       htop  # Process manager
       kubectl  # Manage kubernetes cluster
+      kubernetes-helm  # Kubernetes package manager
+      telepresence  # Allows direct connection to cluster
     ];
   };
 
