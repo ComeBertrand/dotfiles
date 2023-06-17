@@ -128,8 +128,9 @@
       universal-ctags  # Used for tag generation by vim
       dunst  # Notification-daemon
       htop  # Process manager
-      kubectl  # Manage kubernetes cluster
+      kubectl  # Manage kubernetes cluster CLI
       kubernetes-helm  # Kubernetes package manager
+      k9s  # Kubernetes cluster management
       telepresence2  # Allows direct connection to cluster
     ];
   };
