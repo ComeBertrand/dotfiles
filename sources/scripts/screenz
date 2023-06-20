@@ -1,15 +1,49 @@
 #!/usr/bin/env bash
-function screenz() {
-    if xrandr --current | grep -q "$1 connected" ; then
-        xrandr --output $1 --auto --$2 eDP-1
-    else
-        if xrandr --listactivemonitors | grep -q $1; then
-            xrandr --output $1 --off
-        fi
-    fi
+getConnectedOutput() {
+    xrandr --current | grep " connected" | grep -v eDP-1 | awk '{print $1;}' | grep $1
 }
 
-screenz DP-3-1 left-of
-screenz DP-3-2 left-of
-screenz DP-4-1 right-of
-screenz DP-4-2 right-of
+getListedMonitor() {
+    xrandr --listactivemonitors | grep -v eDP-1 | grep -v Monitors | awk '{print $2;}' | tr -d '+' | grep $1
+}
+
+# Fetch the connected outputs
+dp3Connection=$(getConnectedOutput DP-3)
+dp4Connection=$(getConnectedOutput DP-4)
+# Fetch the current active monitors
+dp3Monitor=$(getListedMonitor DP-3)
+dp4Monitor=$(getListedMonitor DP-4)
+
+if [[ ! $dp3Connection -eq '' ]] && [[ ! $dp4Connection -eq '' ]]
+then
+    xrandr --output eDP-1 --auto --output $dp3Connection --auto --left-of eDP-1 --output $dp4Connection --auto --right-of eDP1
+elif [[ ! $dp3Connection -eq '' ]]
+then
+    if [[ ! $dp4Monitor -eq '' ]]
+    then
+        xrandr --output eDP-1 --auto --output $dp3Connection --auto --left-of eDP-1 --output $dp4Monitor --off
+    else
+        xrandr --output eDP-1 --auto --output $dp3Connection --auto --left-of eDP-1
+    fi
+elif [[ ! $dp4Connection -eq '' ]]
+then
+    if [[ ! $dp3Monitor -eq '' ]]
+    then
+        xrandr --output eDP-1 --auto --output $dp4Connection --auto --right-of eDP1 --output $dp3Monitor --off
+    else
+        xrandr --output eDP-1 --auto --output $dp4Connection --auto --right-of eDP1
+    fi
+else
+    if [[ ! $dp3Monitor -eq '' ]] && [[ ! $dp4Monitor -eq '' ]]
+    then
+        xrandr --output eDP-1 --auto --output $dp3Monitor --off --output $dp4Monitor --off
+    elif [[ ! $dp3Monitor -eq '' ]]
+    then
+        xrandr --output eDP-1 --auto --output $dp3Monitor --off
+    elif [[ ! $dp4Monitor -eq '' ]]
+    then
+        xrandr --output eDP-1 --auto --output $dp4Monitor --off
+    else
+        xrandr --output eDP-1 --auto
+    fi
+fi
