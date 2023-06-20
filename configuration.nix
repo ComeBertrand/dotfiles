@@ -132,6 +132,7 @@
       kubernetes-helm  # Kubernetes package manager
       k9s  # Kubernetes cluster management
       telepresence2  # Allows direct connection to cluster
+      xsel  # Allows clipboard copy/paste
     ];
   };
 
@@ -201,9 +202,9 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-     vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
+     vim  # Base editor
      wget
-     rxvt_unicode
+     rxvt_unicode  # Terminal
   ];
   environment.variables.EDITOR = "vim";
 
