@@ -133,6 +133,7 @@
       k9s  # Kubernetes cluster management
       telepresence2  # Allows direct connection to cluster
       xsel  # Allows clipboard copy/paste
+      flameshot  # Screenshot tool
     ];
   };
 
