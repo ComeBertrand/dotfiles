@@ -134,6 +134,7 @@
       telepresence2  # Allows direct connection to cluster
       xsel  # Allows clipboard copy/paste
       flameshot  # Screenshot tool
+      pavucontrol  # Sound control
     ];
   };
 
