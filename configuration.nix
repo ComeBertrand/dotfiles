@@ -135,6 +135,7 @@
       xsel  # Allows clipboard copy/paste
       flameshot  # Screenshot tool
       pavucontrol  # Sound control
+      google-chrome  # Secondary browser
     ];
   };
 
