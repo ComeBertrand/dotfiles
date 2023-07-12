@@ -8,7 +8,7 @@ echo "shell.nix" >> $EXCLUDE_PATH
 echo ".envrc" >> $EXCLUDE_PATH
 
 # Virtualenvs (python)
-echo "./venv/*" >> $EXCLUDE_PATH
+echo ".venv/*" >> $EXCLUDE_PATH
 
 # Vim buffers
 echo "*.swp" >> $EXCLUDE_PATH
