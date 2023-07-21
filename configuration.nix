@@ -192,6 +192,10 @@
       ".tmux.conf" = {
         source = ./sources/tmux.conf;
       };
+      # URxvt conf
+      ".urxvt/ext/resize-font" = {
+        source = ./sources/rxvt-resize-font;
+      };
     };
   };
 
