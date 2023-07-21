@@ -136,6 +136,7 @@
       flameshot  # Screenshot tool
       pavucontrol  # Sound control
       google-chrome  # Secondary browser
+      unzip  # Unzip files
     ];
   };
 
