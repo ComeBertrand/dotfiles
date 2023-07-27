@@ -137,6 +137,8 @@
       pavucontrol  # Sound control
       google-chrome  # Secondary browser
       unzip  # Unzip files
+      gnupg  # Handle PGP
+      pinentry  # Required by gnupg
     ];
   };
 
@@ -158,6 +160,10 @@
       # Custom nixpkgs config
       ".config/nixpkgs/config.nix" = {
         source = ./sources/config.nix;
+      };
+      # Custom gpg-agent conf
+      ".gnupg/gpg-agent.conf" = {
+        source = ./sources/gpg-agent.conf;
       };
       # X configs (colors + URxvt conf)
       ".Xresources" = {
