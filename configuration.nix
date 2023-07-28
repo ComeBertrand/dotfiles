@@ -139,6 +139,7 @@
       unzip  # Unzip files
       gnupg  # Handle PGP
       pinentry  # Required by gnupg
+      visidata  # Useful for data analysis
     ];
   };
 
