@@ -141,6 +141,7 @@
       pinentry  # Required by gnupg
       visidata  # Useful for data analysis
       postman  # API testing
+      gthumb  # Image manipulation
     ];
   };
 
