@@ -142,6 +142,7 @@
       visidata  # Useful for data analysis
       postman  # API testing
       gthumb  # Image manipulation
+      peek  # Create GIF from screen
     ];
   };
 
