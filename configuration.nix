@@ -143,6 +143,7 @@
       postman  # API testing
       gthumb  # Image manipulation
       peek  # Create GIF from screen
+      scc # Project eval
     ];
   };
 
