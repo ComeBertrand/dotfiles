@@ -21,6 +21,12 @@
   };
 
   networking.hostName = "wiremind"; # Define your hostname.
+  # This can be setup to add lines in /etc/hosts
+  # networking.extraHosts =
+  #   ''
+  #     XX.XX.XX.XX my-url
+  #   '';
+
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Configure network proxy if necessary
@@ -131,7 +137,6 @@
       kubectl  # Manage kubernetes cluster CLI
       kubernetes-helm  # Kubernetes package manager
       k9s  # Kubernetes cluster management
-      telepresence2  # Allows direct connection to cluster
       xsel  # Allows clipboard copy/paste
       flameshot  # Screenshot tool
       pavucontrol  # Sound control
@@ -218,13 +223,22 @@
     "nodejs-14.21.3"  # Still in use in old projects
   ];
 
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
-  environment.systemPackages = with pkgs; [
+  environment.systemPackages = with pkgs;
+  let
+    customPkgs = import (builtins.fetchTarball {
+        url = "https://github.com/NixOS/nixpkgs/archive/9957cd48326fe8dbd52fdc50dd2502307f188b0d.tar.gz";
+    }) {};
+
+    myTelepresence = customPkgs.telepresence2;
+  in
+  [
+     myTelepresence  # Allow direct connection to cluster
      vim  # Base editor
+     fzf  # Required for vim
      wget
      rxvt_unicode  # Terminal
   ];
+
   environment.variables.EDITOR = "vim";
 
   # Terminal fonts, chose the one you prefer
