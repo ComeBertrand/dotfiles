@@ -54,6 +54,7 @@
     LC_TIME = "fr_FR.UTF-8";
   };
 
+
   # Enable the X11 windowing system.
   services.xserver = {
     enable = true;
@@ -92,6 +93,12 @@
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
+  services.avahi = {
+    enable = true;
+    nssmdns = true;
+    openFirewall = true;
+  };
+
 
   # Enable sound with pipewire.
   sound.enable = true;
@@ -148,7 +155,7 @@
       postman  # API testing
       gthumb  # Image manipulation
       peek  # Create GIF from screen
-      scc # Project eval
+      scc  # Project eval
     ];
   };
 
@@ -237,6 +244,7 @@
      fzf  # Required for vim
      wget
      rxvt_unicode  # Terminal
+     system-config-printer
   ];
 
   environment.variables.EDITOR = "vim";
