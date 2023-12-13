@@ -157,6 +157,7 @@
       peek  # Create GIF from screen
       scc  # Project eval
       openssl  # Used for certificate & stuff
+      awscli2  # AWS client
     ];
   };
 
