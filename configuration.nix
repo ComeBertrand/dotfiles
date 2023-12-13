@@ -156,6 +156,7 @@
       gthumb  # Image manipulation
       peek  # Create GIF from screen
       scc  # Project eval
+      openssl  # Used for certificate & stuff
     ];
   };
 
