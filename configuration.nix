@@ -158,6 +158,7 @@
       scc  # Project eval
       openssl  # Used for certificate & stuff
       awscli2  # AWS client
+      filezilla  # SFTP client
     ];
   };
 
