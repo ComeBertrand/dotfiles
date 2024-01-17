@@ -159,6 +159,7 @@
       openssl  # Used for certificate & stuff
       awscli2  # AWS client
       filezilla  # SFTP client
+      texlive.combined.scheme-full  # LaTeX compiler + libraries
     ];
   };
 
