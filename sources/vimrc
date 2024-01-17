@@ -141,6 +141,9 @@ Plug 'w0rp/ale'
 " Rust management
 Plug 'rust-lang/rust.vim'
 
+" LaTeX management
+Plug 'lervag/vimtex'
+
 call plug#end()
 
 " Colorscheme
