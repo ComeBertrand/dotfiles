@@ -160,6 +160,8 @@
       awscli2  # AWS client
       filezilla  # SFTP client
       texlive.combined.scheme-full  # LaTeX compiler + libraries
+      kcachegrind  # Profiling tool
+      graphviz  # Used in kcachegrind
     ];
   };
 
