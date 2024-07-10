@@ -55,11 +55,18 @@
   };
 
 
+  services.displayManager = {
+    # Enable GNOME
+    # gdm.enable = true;
+
+    # Enable i3
+    defaultSession = "none+i3";
+  };
   # Enable the X11 windowing system.
   services.xserver = {
     enable = true;
-    layout = "us";
-    xkbVariant = "";
+    xkb.layout = "us";
+    xkb.variant = "";
 
     # Only for i3, force manual launch of display manager
     autorun = false;
@@ -72,13 +79,6 @@
       xterm.enable = false;
     };
 
-    displayManager = {
-      # Enable GNOME
-      # gdm.enable = true;
-
-      # Enable i3
-      defaultSession = "none+i3";
-    };
 
     # i3 config
     windowManager.i3 = {
@@ -95,7 +95,7 @@
   services.printing.enable = true;
   services.avahi = {
     enable = true;
-    nssmdns = true;
+    nssmdns4 = true;
     openFirewall = true;
   };
 
@@ -256,7 +256,7 @@
   environment.variables.EDITOR = "vim";
 
   # Terminal fonts, chose the one you prefer
-  fonts.fonts = with pkgs; [
+  fonts.packages = with pkgs; [
     hermit
     source-code-pro
     terminus_font

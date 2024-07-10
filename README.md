@@ -3,11 +3,11 @@
 ## First step before running recrank: Install home manager
 
 ```
-$ sudo nix-channel --add https://github.com/nix-community/home-manager/archive/release-23.05.tar.gz home-manager
+$ sudo nix-channel --add https://github.com/nix-community/home-manager/archive/release-24.05.tar.gz home-manager
 $ sudo nix-channel --update
 ```
 
-(used the 23.05 version on 2024-02-15)
+(updated to the 24.05 version on 2024-07-10)
 
 
 ## Firefox config
