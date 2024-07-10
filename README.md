@@ -44,3 +44,8 @@ Run `startdm` at startup to start the Display Manager
 ### switchkb
 
 Run `switchkb` to switch between US and FR keyboard layout
+
+
+## Upgrade packages
+
+Go and see: https://superuser.com/questions/1604694/how-to-update-every-package-on-nixos
