@@ -192,7 +192,7 @@ nnoremap <leader>s :TagbarToggle<CR>
 
 " Fuzzy search
 nnoremap <leader>f :Files<CR>
-nnoremap <leader>t : :Tags<CR>
+nnoremap <leader>t :Tags<CR>
 nnoremap ; :Buffers<CR>
 
 " Remove trailing whitespace on save
