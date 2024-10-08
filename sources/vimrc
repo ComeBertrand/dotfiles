@@ -203,7 +203,7 @@ nnoremap <leader><space> :nohlsearch<CR>
 
 " Tags
 nnoremap <leader>b <C-]>
-nnoremap <leader>T :!ctags -R --exclude=.git --exclude=node_modules --exclude=tests --exclude=.mypy_cache --exclude=.gitlab --exclude=.pytest_cache .<CR>
+nnoremap <leader>T :!ctags -R --exclude=.git --exclude=node_modules --exclude=tests --exclude=.mypy_cache --exclude=.ruff_cache --exclude=.gitlab --exclude=.pytest_cache .<CR>
 
 " Remove line below the lightline
 set noshowmode
