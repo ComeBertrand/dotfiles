@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+pidToKill=$(ps -aux | fzf | awk '{print $2;}')
+if [ -n "${pidToKill}" ]
+then
+    kill -9 $pidToKill
+fi

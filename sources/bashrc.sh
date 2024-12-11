@@ -91,3 +91,6 @@ fi
 
 # Setup direnv hook
 eval "$(direnv hook bash)"
+
+eval `ssh-agent` > /dev/null
+ssh-add > /dev/null
