@@ -191,7 +191,7 @@ nnoremap S diw"0P
 nnoremap <leader>s :TagbarToggle<CR>
 
 " Fuzzy search
-nnoremap <leader>f :Files<CR>
+nnoremap <leader>f :GFiles<CR>
 nnoremap <leader>t :Tags<CR>
 nnoremap ; :Buffers<CR>
 
