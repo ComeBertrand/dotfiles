@@ -1,1 +1,1 @@
-sudo nixos-rebuild switch -I nixos-config=configuration.nix
+sudo nixos-rebuild switch -I nixos-config=configuration.nix --verbose

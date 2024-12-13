@@ -101,7 +101,6 @@
 
 
   # Enable sound with pipewire.
-  sound.enable = true;
   hardware.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
@@ -250,7 +249,7 @@
      vim  # Base editor
      fzf  # Required for vim
      wget
-     rxvt_unicode  # Terminal
+     rxvt-unicode-unwrapped  # Terminal
      system-config-printer
   ];
 
@@ -289,5 +288,9 @@
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "23.05"; # Did you read the comment?
+
+  # Allow auto-upgrade
+  system.autoUpgrade.enable = true;
+  system.autoUpgrade.allowReboot = true;
 
 }
