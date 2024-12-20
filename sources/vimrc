@@ -144,6 +144,9 @@ Plug 'rust-lang/rust.vim'
 " LaTeX management
 Plug 'lervag/vimtex'
 
+" Github copilot
+Plug 'github/copilot.vim'
+
 call plug#end()
 
 " Colorscheme
