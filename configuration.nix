@@ -145,6 +145,7 @@
       k9s  # Kubernetes cluster management
       xsel  # Allows clipboard copy/paste
       flameshot  # Screenshot tool
+      pulseaudio  # Sound control
       pavucontrol  # Sound control
       google-chrome  # Secondary browser
       unzip  # Unzip files
