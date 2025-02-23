@@ -144,6 +144,13 @@ Plug 'rust-lang/rust.vim'
 " LaTeX management
 Plug 'lervag/vimtex'
 
+" Github copilot
+" Run :Copilot setup (might need node)
+Plug 'github/copilot.vim'
+
+" VimAI
+" Plug 'madox2/vim-ai'
+
 call plug#end()
 
 " Colorscheme

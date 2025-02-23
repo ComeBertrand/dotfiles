@@ -136,7 +136,6 @@
       slack  # communication platform
       direnv  # Custom virtualenvs in folders
       nix-direnv  # Use nix-shell with direnv
-      python311  # So that I can have an interactive python
       universal-ctags  # Used for tag generation by vim
       dunst  # Notification-daemon
       htop  # Process manager
@@ -244,9 +243,11 @@
     }) {};
     unstable = import <nixos-unstable> { config = { allowUnfree = true; };};
   in
-  [
+
+   [
+     python311  # So that I can have an interactive python
+     (vim_configurable.override { python3 = pkgs.python311; })
      customPkgs.telepresence2  # Allow direct connection to cluster
-     vim  # Base editor
      fzf  # Required for vim
      wget
      rxvt-unicode-unwrapped  # Terminal
