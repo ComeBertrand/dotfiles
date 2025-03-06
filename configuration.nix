@@ -9,6 +9,7 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       <home-manager/nixos>
+      ../nix-work
     ];
 
   # Bootloader.
@@ -238,16 +239,14 @@
 
   environment.systemPackages = with pkgs;
   let
-    customPkgs = import (builtins.fetchTarball {
-        url = "https://github.com/NixOS/nixpkgs/archive/9957cd48326fe8dbd52fdc50dd2502307f188b0d.tar.gz";
-    }) {};
     unstable = import <nixos-unstable> { config = { allowUnfree = true; };};
   in
 
    [
      python311  # So that I can have an interactive python
      (vim_configurable.override { python3 = pkgs.python311; })
-     customPkgs.telepresence2  # Allow direct connection to cluster
+     telepresence2  # Allow direct connection to cluster
+     killall  # To clean up processes
      fzf  # Required for vim
      wget
      rxvt-unicode-unwrapped  # Terminal
