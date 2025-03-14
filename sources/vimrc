@@ -206,7 +206,7 @@ nnoremap <leader>th :term<CR>
 nnoremap <leader>tv :vert term<CR>
 
 " Exit terminal mode
-tnoremap <C-[> <C-\><C-N>
+tnoremap jk <C-\><C-N>
 tnoremap <C-v> <C-W>"+
 
 " Replace
