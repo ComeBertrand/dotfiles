@@ -3,6 +3,7 @@
 set encoding=utf-8
 set fileencoding=utif-8
 set nocompatible
+set clipboard=unnamedplus
 
 " Avoid disturbing beeps on error
 set belloff=all
@@ -148,9 +149,6 @@ Plug 'lervag/vimtex'
 " Run :Copilot setup (might need node)
 Plug 'github/copilot.vim'
 
-" VimAI
-" Plug 'madox2/vim-ai'
-
 call plug#end()
 
 " Colorscheme
@@ -182,14 +180,34 @@ let g:ranger_replace_netrw = 1
 
 let mapleader="\\"
 
+" Move around in normal mode
 nnoremap <C-J> <C-W><C-J>
 nnoremap <C-K> <C-W><C-K>
 nnoremap <C-L> <C-W><C-L>
 nnoremap <C-H> <C-W><C-H>
 
+" Move around in terminal mode
+tnoremap <C-J> <C-W><C-J>
+tnoremap <C-K> <C-W><C-K>
+tnoremap <C-L> <C-W><C-L>
+tnoremap <C-H> <C-W><C-H>
+
 " Window size management
-nnoremap <C-N> <C-W>_
-nnoremap <C-N><C-N> <C-W>=
+nnoremap <leader>wh <C-W>_
+nnoremap <leader>wv <C-W>|
+nnoremap <leader>we <C-W>=
+
+tnoremap <leader>wh <C-W>_
+tnoremap <leader>wv <C-W>|
+tnoremap <leader>we <C-W>=
+
+" Open terminals
+nnoremap <leader>th :term<CR>
+nnoremap <leader>tv :vert term<CR>
+
+" Exit terminal mode
+tnoremap <C-[> <C-\><C-N>
+tnoremap <C-v> <C-W>"+
 
 " Replace
 nnoremap S diw"0P

@@ -17,3 +17,6 @@ echo "*.swo" >> $EXCLUDE_PATH
 # Ctags generated tags
 echo "tags" >> $EXCLUDE_PATH
 echo "tags.safe" >> $EXCLUDE_PATH
+
+# Aider related excludes
+echo ".aider*" >> $EXCLUDE_PATH
