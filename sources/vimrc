@@ -149,6 +149,9 @@ Plug 'lervag/vimtex'
 " Run :Copilot setup (might need node)
 Plug 'github/copilot.vim'
 
+" Aider
+Plug 'ComeBertrand/vaider'
+
 call plug#end()
 
 " Colorscheme
@@ -301,3 +304,8 @@ if exists("$EXTRA_VIM")
 	    exec "source ".path
     endfor
 endif
+
+" Aider commands
+nnoremap <leader>as :AiderStart<CR>
+nnoremap <leader>aa :AiderAddFile<CR>
+nnoremap <leader>ar: AiderReset<CR>
