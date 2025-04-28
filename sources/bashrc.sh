@@ -92,5 +92,5 @@ fi
 # Setup direnv hook
 eval "$(direnv hook bash)"
 
-eval `ssh-agent` > /dev/null
-ssh-add > /dev/null
+eval `ssh-agent` > /dev/null 2>&1
+ssh-add 2> >(grep -v "Identity added") > /dev/null

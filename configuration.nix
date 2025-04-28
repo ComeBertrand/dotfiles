@@ -235,6 +235,7 @@
   # Allowed unsecure packages
   nixpkgs.config.permittedInsecurePackages = [
     "nodejs-14.21.3"  # Still in use in old projects
+    "nodejs_14"
   ];
 
   environment.systemPackages = with pkgs;
@@ -251,7 +252,11 @@
      wget
      rxvt-unicode-unwrapped  # Terminal
      system-config-printer
-     unstable.code-cursor  # AI-powered IDE
+        # Replace unstable.claude-code with this wrapper
+     (pkgs.writeShellScriptBin "claude" ''
+       export LD_LIBRARY_PATH=${pkgs.gcc13.cc.lib}/lib:$LD_LIBRARY_PATH
+       exec ${unstable.claude-code}/bin/claude "$@"
+     '')
   ];
 
   environment.variables.EDITOR = "vim";
@@ -262,6 +267,22 @@
     source-code-pro
     terminus_font
   ];
+
+  # Enable nix-ld with recommended defaults (allows usage of pre-build executables like ruff)
+  programs.nix-ld = {
+    enable = true;
+    libraries = with pkgs; [
+      stdenv.cc.cc.lib
+      zlib
+      openssl
+      curl
+      expat
+      libuuid
+      icu
+      zstd
+      xz
+    ];
+  };
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
