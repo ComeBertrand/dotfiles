@@ -21,6 +21,7 @@
     "/crypto_keyfile.bin" = null;
   };
 
+
   networking.hostName = "wiremind"; # Define your hostname.
   # This can be setup to add lines in /etc/hosts
   # networking.extraHosts =
@@ -36,6 +37,7 @@
 
   # Enable networking
   networking.networkmanager.enable = true;
+
 
   # Set your time zone.
   time.timeZone = "Europe/Paris";
@@ -68,6 +70,8 @@
     enable = true;
     xkb.layout = "us";
     xkb.variant = "";
+    # Load nvidia driver for Xorg and Wayland
+    # videoDrivers = ["nvidia"];
 
     # Only for i3, force manual launch of display manager
     autorun = false;
@@ -91,6 +95,7 @@
       ];
     };
   };
+
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
@@ -252,11 +257,8 @@
      wget
      rxvt-unicode-unwrapped  # Terminal
      system-config-printer
-        # Replace unstable.claude-code with this wrapper
-     (pkgs.writeShellScriptBin "claude" ''
-       export LD_LIBRARY_PATH=${pkgs.gcc13.cc.lib}/lib:$LD_LIBRARY_PATH
-       exec ${unstable.claude-code}/bin/claude "$@"
-     '')
+     # Replace unstable.claude-code with this wrapper
+     unstable.claude-code
   ];
 
   environment.variables.EDITOR = "vim";
