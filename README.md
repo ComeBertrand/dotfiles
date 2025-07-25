@@ -50,10 +50,14 @@ Run `switchkb` to switch between US and FR keyboard layout
 
 Go and see: https://superuser.com/questions/1604694/how-to-update-every-package-on-nixos
 
+
+## Upgrade NixOS version
+
+https://nixos.org/manual/nixos/stable/index.html#sec-upgrading
+Update the channels using new version, always use sudo before nix-channel otherwise it won't do anything
+
 ## Checking configuration.nix before upgrade
 
 Warning -> not that helpful actually
 Run `sudo bash -x $(nix-build --no-out-link '<nixos/nixos>' -A system -I nixos-config=configuration.nix)/activate`
 
-To upgrade:
-Update the channels using new version, always use sudo before nix-channel otherwise it won't do anything
