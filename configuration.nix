@@ -257,8 +257,8 @@
      wget
      rxvt-unicode-unwrapped  # Terminal
      system-config-printer
-     # Replace unstable.claude-code with this wrapper
      unstable.claude-code
+     unstable.gemini-cli
   ];
 
   environment.variables.EDITOR = "vim";
