@@ -197,11 +197,15 @@ tnoremap <C-H> <C-W><C-H>
 
 " Window size management
 nnoremap <leader>wh <C-W>_
+nnoremap <leader>wl 20<C-W><
+nnoremap <leader>wr 20<C-W>>
 nnoremap <leader>wv <C-W>|
 nnoremap <leader>we <C-W>=
 
 tnoremap <leader>wh <C-W>_
-tnoremap <leader>wv <C-W>|
+tnoremap <leader>wl 20<C-W><
+tnoremap <leader>wr 20<C-W>>
+nnoremap <leader>wv <C-W>|
 tnoremap <leader>we <C-W>=
 
 " Open terminals
