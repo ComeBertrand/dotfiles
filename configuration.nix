@@ -167,6 +167,8 @@
       texlive.combined.scheme-full  # LaTeX compiler + libraries
       kdePackages.kcachegrind
       graphviz  # Used in kcachegrind
+      vlc  # Video player
+      nix-tree  # Packages vizualizer
     ];
   };
 
@@ -259,6 +261,7 @@
      system-config-printer
      unstable.claude-code
      unstable.gemini-cli
+     dmidecode
   ];
 
   environment.variables.EDITOR = "vim";
