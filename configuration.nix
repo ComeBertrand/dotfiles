@@ -261,6 +261,7 @@
      system-config-printer
      unstable.claude-code
      unstable.gemini-cli
+     unstable.codex
      dmidecode
   ];
 
