@@ -252,6 +252,7 @@
 
    [
      python311  # So that I can have an interactive python
+     uv  # python package manager
      (vim_configurable.override { python3 = pkgs.python311; })
      telepresence2  # Allow direct connection to cluster
      killall  # To clean up processes

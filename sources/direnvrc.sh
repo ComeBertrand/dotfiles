@@ -9,7 +9,12 @@ start-venv() {
       VIRTUAL_ENV=$PWD/.venv
   fi
   if [[ ! -d $VIRTUAL_ENV ]]; then
-      python -m venv "$VIRTUAL_ENV"
+      py_bin="$(command -v python)"
+      if command -v uv >/dev/null 2>&1; then
+          uv venv --python "$py_bin" "$VIRTUAL_ENV"
+      else
+          "$py_bin" -m venv "$VIRTUAL_ENV"
+      fi
   fi
   export VIRTUAL_ENV
   PATH="${VIRTUAL_ENV}/bin:${PATH}"
