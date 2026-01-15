@@ -169,6 +169,7 @@
       graphviz  # Used in kcachegrind
       vlc  # Video player
       nix-tree  # Packages vizualizer
+      infisical  # Secret management
     ];
   };
 
