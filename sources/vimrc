@@ -241,7 +241,7 @@ Plug 'github/copilot.vim'               " GitHub Copilot AI completion
 " Utilities
 " --------------------------------------------------------------------------
 Plug 'tpope/vim-dispatch'               " Async build/test runner
-Plug 'tpope/vim-dadbod'                 " Database interface
+Plug 'vim-test/vim-test'                " Test intelligence
 
 call plug#end()
 
@@ -389,6 +389,21 @@ let g:ranger_replace_netrw = 1
 let g:dispatch_no_maps = 1
 
 " --------------------------------------------------------------------------
+" Vim-Test
+" --------------------------------------------------------------------------
+" Allow automatic test launches
+"
+" KEYBINDINGS (defined in Section 12):
+"   \tn - Launch closest test to cursor
+"   \tf - Launch tests on current file
+"   \tn - Launch full test suite
+"   \tn - Re-launch last test
+
+" Use dispatch engine for launching tests
+let g:test#strategy = 'dispatch'
+
+
+" --------------------------------------------------------------------------
 " Rust
 " --------------------------------------------------------------------------
 " Auto-format Rust files with rustfmt on save
@@ -476,16 +491,14 @@ nnoremap <leader>n :Ranger<CR>
 " \b - Go to definition (jump to where symbol is defined)
 " \r - Find references (show all usages of symbol)
 " \R - Rename symbol (refactor across files)
-" \t - Symbol search (search for symbol by name)
-" \a - Code action (quick fixes, refactoring options)
+" \a - Symbol search (search for symbol by name)
 " K  - Hover documentation (show info about symbol under cursor)
 " ]e - Jump to next error or warning
 " [e - Jump to previous error or warning
 nnoremap <leader>b :ALEGoToDefinition<CR>
 nnoremap <leader>r :ALEFindReferences<CR>
 nnoremap <leader>R :ALERename<CR>
-nnoremap <leader>t :ALESymbolSearch<space>
-nnoremap <leader>a :ALECodeAction<CR>
+nnoremap <leader>a :ALESymbolSearch<space>
 nnoremap K :ALEHover<CR>
 nnoremap ]e :ALENextWrap<CR>
 nnoremap [e :ALEPreviousWrap<CR>
@@ -524,6 +537,19 @@ nnoremap <leader><space> :nohlsearch<CR>
 nnoremap S diw"0P
 
 
+" --------------------------------------------------------------------------
+" Tests (vim-dispatch + vim-test)
+" --------------------------------------------------------------------------
+" \tn - Launch closest test to cursor
+" \tf - Launch tests on current file
+" \tn - Launch full test suite
+" \tn - Re-launch last test
+nnoremap <leader>tn :TestNearest<CR>
+nnoremap <leader>tf :TestFile<CR>
+nnoremap <leader>ts :TestSuite<CR>
+nnoremap <leader>tl :TestLast<CR>
+
+
 " ============================================================================
 " SECTION 13: LANGUAGE-SPECIFIC SETTINGS
 " ============================================================================
@@ -555,12 +581,6 @@ augroup END
 " ============================================================================
 " SECTION 14: CUSTOM COMMANDS AND FUNCTIONS
 " ============================================================================
-
-" --------------------------------------------------------------------------
-" Database
-" --------------------------------------------------------------------------
-" :DBsp - Execute query using the database connection in g:db
-command! DBsp :DB g:db
 
 " --------------------------------------------------------------------------
 " Smart Grep
@@ -631,6 +651,12 @@ endif
 "   \a              Code action
 "   K               Hover documentation
 "   ]e / [e         Next/previous error
+"
+" CODE TESTS (vim-test)
+"   \tn             Run nearest test
+"   \tf             Run test on current file
+"   \ts             Run full test suite
+"   \tl             Run last test
 "
 " GIT
 "   ]h / [h         Next/previous hunk
