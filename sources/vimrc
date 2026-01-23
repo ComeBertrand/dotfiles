@@ -1,84 +1,173 @@
-" Basic options
+" ============================================================================
+" VIM CONFIGURATION
+" ============================================================================
+" A comprehensive Vim setup for modern development with support for:
+" - Python, Rust, TypeScript, LaTeX
+" - Git integration (Fugitive + GitGutter)
+" - Fuzzy finding (FZF)
+" - Code intelligence via ALE (linting, LSP, completion)
+" - GitHub Copilot
+"
+" QUICK START:
+" 1. Copy this file to ~/.vimrc
+" 2. Open Vim and run :PlugInstall to install all plugins
+" 3. For Copilot: run :Copilot setup (requires Node.js)
+"
+" LEADER KEY: \ (backslash)
+"
+" ============================================================================
 
-set encoding=utf-8
-set fileencoding=utf-8
+
+" ============================================================================
+" SECTION 1: CORE SETTINGS
+" ============================================================================
+" Fundamental Vim behavior settings
+
+" Use UTF-8 encoding everywhere
+set encoding=utf-8                      " Internal Vim encoding
+set fileencoding=utf-8                  " Encoding when saving files
+
+" Enable full Vim features (disable Vi compatibility)
 set nocompatible
+
+" Use system clipboard for all yank/paste operations
+" This means 'y' copies to system clipboard, 'p' pastes from it
+" No need for "+y or "+p anymore!
 set clipboard=unnamedplus
 
-" Avoid disturbing beeps on error
+" Disable all error bells and visual flashes
 set belloff=all
+
+
+" ============================================================================
+" SECTION 2: DISPLAY AND VISUAL SETTINGS
+" ============================================================================
+" How things look on screen
 
 " Enable syntax highlighting
 syntax enable
 
-" Load filetype specific indent and plugins
+" Load filetype-specific indentation rules and plugins
 filetype indent on
 filetype plugin on
 
-" Use hidden buffers
-set hidden
+" --------------------------------------------------------------------------
+" Line Numbers (Hybrid Mode)
+" --------------------------------------------------------------------------
+" Shows absolute line number on current line, relative numbers elsewhere
+" This makes it easy to jump with commands like 5j (down 5) or 12k (up 12)
+set number                              " Absolute number on current line
+set relativenumber                      " Relative numbers elsewhere
 
-" Autoread written files as long as there aren't any unsaved changes
-set autoread
-
-" Do not wrap lines but improve horizonal scrolling
-set nowrap
-set sidescroll=1
-set sidescrolloff=15
-
-" Always show some lines above and below the cursor
-set scrolloff=15
-
-" Always show status line
-set laststatus=2
-
-" Show cursor position on bottom-right corner
-set ruler
-
-" Show line number on curretn line and relative number elsewhere
-set number
-set relativenumber
-
-" Highlight current line
+" --------------------------------------------------------------------------
+" Cursor and Scrolling
+" --------------------------------------------------------------------------
+" Highlight the line where the cursor is
 set cursorline
 
-" Highlight search result
+" Always keep 15 lines visible above/below cursor when scrolling vertically
+set scrolloff=15
+
+" Horizontal scrolling settings (when lines are longer than window)
+set nowrap                              " Don't wrap long lines
+set sidescroll=1                        " Scroll horizontally 1 char at a time
+set sidescrolloff=15                    " Keep 15 columns visible left/right
+
+" --------------------------------------------------------------------------
+" Status Line
+" --------------------------------------------------------------------------
+" Always show the status line (even with only one window)
+set laststatus=2
+
+" Show cursor position (line, column) in bottom-right corner
+set ruler
+
+" Hide mode indicator (INSERT, VISUAL, etc.) - lightline plugin shows it
+set noshowmode
+
+
+" ============================================================================
+" SECTION 3: SEARCH SETTINGS
+" ============================================================================
+" How searching works
+
+" Highlight all matches of the search pattern
 set hlsearch
 
-" Perform incremental search
+" Show matches incrementally as you type the search pattern
 set incsearch
 
-" Ignore case by default except if search has upper case character
-" Use \C to search with case sensitivity, \c to search without it
+" Smart case sensitivity:
+" - Lowercase search = case-insensitive (e.g., /hello matches Hello, HELLO)
+" - Any uppercase = case-sensitive (e.g., /Hello only matches Hello)
+" Use \C to force case-sensitive, \c to force case-insensitive
 set ignorecase
 set smartcase
 
-" Highlight matching brackets
+" Briefly jump to matching bracket when you type a closing bracket
 set showmatch
 
-" Tabs
-set tabstop=4
-set softtabstop=4
-set shiftwidth=4
-set expandtab
 
-" Store undo in file
-set undofile
-set undodir=~/.vim/tmp.undo//
+" ============================================================================
+" SECTION 4: INDENTATION AND TABS
+" ============================================================================
+" How tabs and indentation work
+
+set tabstop=4                           " Display tab characters as 4 spaces
+set softtabstop=4                       " Pressing Tab inserts 4 spaces
+set shiftwidth=4                        " Indentation (>>, <<) uses 4 spaces
+set expandtab                           " Insert spaces instead of tab characters
+
+
+" ============================================================================
+" SECTION 5: PERSISTENT UNDO
+" ============================================================================
+" Save undo history to disk - you can undo changes even after closing a file!
+
+set undofile                            " Enable persistent undo
+set undodir=~/.vim/tmp.undo//           " Where to store undo files
+
+" Create the undo directory if it doesn't exist
 if !isdirectory(expand(&undodir))
     call mkdir(expand(&undodir), "p")
 endif
 
-" Open vertical split on the right, horizontal below
+
+" ============================================================================
+" SECTION 6: WINDOW AND SPLIT MANAGEMENT
+" ============================================================================
+" How splits and windows behave
+
+" New vertical splits open to the RIGHT of current window
 set splitright
+
+" New horizontal splits open BELOW current window
 set splitbelow
 
-" Wildmenu completion
-" TODEL?
-set wildmenu
-set wildmode=full
 
-" Files ignored in search
+" ============================================================================
+" SECTION 7: BUFFER HANDLING
+" ============================================================================
+" How Vim handles multiple open files
+
+" Allow switching buffers without saving changes first
+" Unsaved changes are preserved in the background
+set hidden
+
+" Automatically reload files changed outside Vim
+" (only if there are no unsaved changes in Vim)
+set autoread
+
+
+" ============================================================================
+" SECTION 8: WILDMENU (Command-Line Completion)
+" ============================================================================
+" Enhanced tab completion for commands
+
+set wildmenu                            " Show completion menu for commands
+set wildmode=full                       " Cycle through all matches
+
+" Files and directories to ignore in searches and completion
 set wildignore+=.git,tags,.sw?
 set wildignore+=*.pyc
 set wildignore+=**/build/**
@@ -86,186 +175,93 @@ set wildignore+=**node_modules/**,**/bower_components/**,**/dist/**
 set wildignore+=package_lock.json
 set wildignore+=*.jpg,*.bmp,*.gif,*.png,*.jpeg
 
+
+" ============================================================================
+" SECTION 9: PLUGIN MANAGER (vim-plug)
+" ============================================================================
+" Auto-install vim-plug if not present, then load plugins
+"
+" COMMANDS:
+"   :PlugInstall  - Install all plugins
+"   :PlugUpdate   - Update all plugins
+"   :PlugClean    - Remove unused plugins
+"   :PlugStatus   - Check plugin status
+
 let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
 if empty(glob(data_dir . '/autoload/plug.vim'))
     silent execute '!curl -fLo '.data_dir.'/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
     autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
 endif
 
-" Plugins
-" To install everything run :PlugInstall
-" To update run :PlugUpdate
 call plug#begin()
 
-" Pretty line below
-Plug 'itchyny/lightline.vim'
+" --------------------------------------------------------------------------
+" UI Enhancements
+" --------------------------------------------------------------------------
+Plug 'itchyny/lightline.vim'            " Beautiful, lightweight status line
+Plug 'morhetz/gruvbox'                  " Retro colorscheme
+Plug 'junegunn/rainbow_parentheses.vim' " Color-coded matching brackets
 
-" Smart navigation between tmux and vim panes
-Plug 'christoomey/vim-tmux-navigator'
-Plug 'benmills/vimux'
-
-" Use ranger as file explorer
-Plug 'francoiscabrol/ranger.vim'
-
-" Git
-Plug 'tpope/vim-fugitive'
-Plug 'airblade/vim-gitgutter'
-
-" Ansynchronous build and test dispatcher
-Plug 'tpope/vim-dispatch'
-
-" Color matching parentheses
-Plug 'junegunn/rainbow_parentheses.vim'
-
-" Tagbar
-Plug 'majutsushi/tagbar'
-
-" Fuzzy finder
+" --------------------------------------------------------------------------
+" Navigation and File Management
+" --------------------------------------------------------------------------
+Plug 'christoomey/vim-tmux-navigator'   " Seamless nav between Vim/tmux splits
+Plug 'benmills/vimux'                   " Run commands in tmux pane from Vim
+Plug 'francoiscabrol/ranger.vim'        " Use Ranger file manager in Vim
+Plug 'majutsushi/tagbar'                " Code structure sidebar (functions, classes)
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all'}
-Plug 'junegunn/fzf.vim'
+Plug 'junegunn/fzf.vim'                 " Fuzzy finder for files, buffers, etc.
 
-" Typescript syntax
-Plug 'HerringtonDarkholme/yats.vim'
+" --------------------------------------------------------------------------
+" Git Integration
+" --------------------------------------------------------------------------
+Plug 'tpope/vim-fugitive'               " Full Git client inside Vim
+Plug 'airblade/vim-gitgutter'           " Shows git diff in sign column
 
-" Highlight colors in CSS
-Plug 'vim-scripts/colorizer'
+" --------------------------------------------------------------------------
+" Code Intelligence and Linting
+" --------------------------------------------------------------------------
+Plug 'w0rp/ale'                         " Async linting, LSP, completion
 
-" Theme
-Plug 'morhetz/gruvbox'
+" --------------------------------------------------------------------------
+" Language Support
+" --------------------------------------------------------------------------
+Plug 'HerringtonDarkholme/yats.vim'     " TypeScript syntax
+Plug 'vim-scripts/colorizer'            " Highlight CSS colors
+Plug 'rust-lang/rust.vim'               " Rust language support
+Plug 'lervag/vimtex'                    " LaTeX editing support
 
-" DB
-Plug 'tpope/vim-dadbod'
+" --------------------------------------------------------------------------
+" AI and Completion
+" --------------------------------------------------------------------------
+" After installing, run :Copilot setup (requires Node.js)
+Plug 'github/copilot.vim'               " GitHub Copilot AI completion
 
-" Linting
-Plug 'w0rp/ale'
-
-" Rust management
-Plug 'rust-lang/rust.vim'
-
-" LaTeX management
-Plug 'lervag/vimtex'
-
-" Github copilot
-" Run :Copilot setup (might need node)
-Plug 'github/copilot.vim'
-
+" --------------------------------------------------------------------------
+" Utilities
+" --------------------------------------------------------------------------
+Plug 'tpope/vim-dispatch'               " Async build/test runner
+Plug 'tpope/vim-dadbod'                 " Database interface
 
 call plug#end()
 
-" Colorscheme
+
+" ============================================================================
+" SECTION 10: COLORSCHEME
+" ============================================================================
+
 colorscheme gruvbox
 set bg=dark
 
-" Disable vim-dispatch default maps because I don't use them
-let g:dispatch_no_maps = 1
 
-" Fix gutter width
-let g:ale_sign_column_always = 1
-let g:ale_echo_msg_format = '[%linter%] %s'
+" ============================================================================
+" SECTION 11: PLUGIN CONFIGURATIONS
+" ============================================================================
 
-" Remove weird underlined words
-let g:ale_set_highlights = 0
-
-let g:ale_sign_error = '•'
-let g:ale_sign_warning = '•'
-
-highlight ALEErrorSign ctermfg=9 ctermbg=18
-highlight ALEWarningSign ctermfg=11 ctermbg=18
-
-let g:ale_linters = {
-\   'python': ['ruff', 'pyright'],
-\   'rust': ['analyzer'],
-\   'typescript': ['tsserver', 'eslint'],
-\}
-let g:ale_fixers = {
-\   'python': ['ruff', 'ruff_format'],
-\   'rust': ['rustfmt'],
-\   'typescript': ['prettier', 'eslint'],
-\}
-let g:ale_completion_enabled = 1
-let g:ale_fix_on_save = 1
-
-nnoremap <leader>b :ALEGoToDefinition<CR>
-nnoremap <leader>r :ALEFindReferences<CR>
-nnoremap <leader>R :ALERename<CR>
-nnoremap <leader>t :ALESymbolSearch<space>
-nnoremap K :ALEHover<CR>
-nnoremap <leader>a :ALECodeAction<CR>
-nnoremap ]e :ALENextWrap<CR>
-nnoremap [e :ALEPreviousWrap<CR>
-
-
-" Ranger Disable default key mapping
-let g:ranger_map_keys = 0
-nnoremap <leader>n :Ranger<CR>
-let g:ranger_replace_netrw = 1
-
-" Key bindings
-
-let mapleader="\\"
-
-" Move around in normal mode
-nnoremap <C-J> <C-W><C-J>
-nnoremap <C-K> <C-W><C-K>
-nnoremap <C-L> <C-W><C-L>
-nnoremap <C-H> <C-W><C-H>
-
-" Move around in terminal mode
-tnoremap <C-J> <C-W><C-J>
-tnoremap <C-K> <C-W><C-K>
-tnoremap <C-L> <C-W><C-L>
-tnoremap <C-H> <C-W><C-H>
-
-" Window size management
-nnoremap <leader>wh <C-W>_
-nnoremap <leader>wl 20<C-W><
-nnoremap <leader>wr 20<C-W>>
-nnoremap <leader>wv <C-W>|
-nnoremap <leader>we <C-W>=
-
-tnoremap <leader>wh <C-W>_
-tnoremap <leader>wl 20<C-W><
-tnoremap <leader>wr 20<C-W>>
-nnoremap <leader>wv <C-W>|
-tnoremap <leader>we <C-W>=
-
-" Open terminals
-nnoremap <leader>th :term<CR>
-nnoremap <leader>tv :vert term<CR>
-
-" Exit terminal mode
-tnoremap jk <C-\><C-N>
-tnoremap <C-v> <C-W>"+
-
-" Replace
-nnoremap S diw"0P
-
-" Open tagbar
-nnoremap <leader>s :TagbarToggle<CR>
-
-" Fuzzy search
-nnoremap <leader>f :GFiles<CR>
-nnoremap ; :Buffers<CR>
-
-" Turn off search highlight
-nnoremap <leader><space> :nohlsearch<CR>
-
-" Gitgutter
-set updatetime=100                     " Faster sign updates (default 4000ms)
-let g:gitgutter_map_keys = 0           " Disable default mappings
-
-" Navigation between hunks
-nnoremap ]h :GitGutterNextHunk<CR>
-nnoremap [h :GitGutterPrevHunk<CR>
-
-" Stage/undo/preview hunks
-nnoremap <leader>hs :GitGutterStageHunk<CR>
-nnoremap <leader>hu :GitGutterUndoHunk<CR>
-nnoremap <leader>hp :GitGutterPreviewHunk<CR>
-
-
-" Remove line below the lightline
-set noshowmode
+" --------------------------------------------------------------------------
+" Lightline (Status Line)
+" --------------------------------------------------------------------------
+" Shows: mode | git branch | filename | modified status
 let g:lightline = {
      \ 'colorscheme': 'wombat',
      \ 'active': {
@@ -277,58 +273,390 @@ let g:lightline = {
      \ },
      \ }
 
-" Python
+" --------------------------------------------------------------------------
+" ALE (Asynchronous Lint Engine)
+" --------------------------------------------------------------------------
+" Provides: real-time linting, code completion, go-to-definition, and more
+"
+" KEYBINDINGS (defined in Section 12):
+"   \b  - Go to definition
+"   \r  - Find references
+"   \R  - Rename symbol
+"   \t  - Symbol search
+"   \a  - Code action (quick fixes)
+"   K   - Show hover documentation
+"   ]e  - Next error/warning
+"   [e  - Previous error/warning
+
+" Always show the sign column (prevents layout jumping)
+let g:ale_sign_column_always = 1
+
+" Format for error messages in the command line
+let g:ale_echo_msg_format = '[%linter%] %s'
+
+" Disable underline highlighting (keep signs only)
+let g:ale_set_highlights = 0
+
+" Use bullets for error/warning signs
+let g:ale_sign_error = '•'
+let g:ale_sign_warning = '•'
+
+" Sign colors (red for errors, yellow for warnings)
+highlight ALEErrorSign ctermfg=9 ctermbg=18
+highlight ALEWarningSign ctermfg=11 ctermbg=18
+
+" Configure linters per language
+let g:ale_linters = {
+\   'python': ['ruff', 'pyright'],
+\   'rust': ['analyzer'],
+\   'typescript': ['tsserver', 'eslint'],
+\}
+
+" Configure auto-fixers per language
+let g:ale_fixers = {
+\   'python': ['ruff', 'ruff_format'],
+\   'rust': ['rustfmt'],
+\   'typescript': ['prettier', 'eslint'],
+\}
+
+" Enable code completion from LSP
+let g:ale_completion_enabled = 1
+
+" Automatically fix code on save
+let g:ale_fix_on_save = 1
+
+" --------------------------------------------------------------------------
+" GitGutter
+" --------------------------------------------------------------------------
+" Shows +/~/- signs in the gutter for git changes
+"
+" KEYBINDINGS (defined in Section 12):
+"   ]h  - Jump to next changed hunk
+"   [h  - Jump to previous changed hunk
+"   \hs - Stage the current hunk
+"   \hu - Undo (revert) the current hunk
+"   \hp - Preview what changed in the hunk
+
+" Fast sign updates (default is 4000ms)
+set updatetime=100
+
+" Disable default mappings (we define our own below)
+let g:gitgutter_map_keys = 0
+
+" --------------------------------------------------------------------------
+" Ranger (File Explorer)
+" --------------------------------------------------------------------------
+" Use Ranger instead of netrw as the file explorer
+"
+" KEYBINDING: \n - Open Ranger
+
+" Disable default key mapping
+let g:ranger_map_keys = 0
+
+" Replace netrw (the default file explorer) with Ranger
+let g:ranger_replace_netrw = 1
+
+" --------------------------------------------------------------------------
+" FZF (Fuzzy Finder)
+" --------------------------------------------------------------------------
+" Lightning-fast fuzzy search for files and buffers
+"
+" KEYBINDINGS (defined in Section 12):
+"   \f  - Search git-tracked files
+"   ;   - Search open buffers
+"
+" IN FZF WINDOW:
+"   Enter   - Open file in current window
+"   Ctrl+T  - Open in new tab
+"   Ctrl+X  - Open in horizontal split
+"   Ctrl+V  - Open in vertical split
+
+" (FZF is configured via the plugin installation above)
+
+" --------------------------------------------------------------------------
+" Tagbar
+" --------------------------------------------------------------------------
+" Shows code structure in a sidebar
+"
+" KEYBINDING: \s - Toggle Tagbar
+
+" (Configuration is minimal, uses defaults)
+
+" --------------------------------------------------------------------------
+" Vim-Dispatch
+" --------------------------------------------------------------------------
+" Disable default mappings (we don't use them)
+let g:dispatch_no_maps = 1
+
+" --------------------------------------------------------------------------
+" Rust
+" --------------------------------------------------------------------------
+" Auto-format Rust files with rustfmt on save
+let g:rustfmt_autosave = 1
+
+" Use workspace-wide cargo check
+let g:rust_cargo_avoid_whole_workspace = 0
+
+
+" ============================================================================
+" SECTION 12: KEY MAPPINGS
+" ============================================================================
+" All custom keybindings in one place
+
+" Set the leader key to backslash (\)
+let mapleader="\\"
+
+" --------------------------------------------------------------------------
+" Window Navigation (Normal Mode)
+" --------------------------------------------------------------------------
+" Move between splits with Ctrl + direction
+" Also works seamlessly with tmux panes!
+nnoremap <C-J> <C-W><C-J>
+nnoremap <C-K> <C-W><C-K>
+nnoremap <C-L> <C-W><C-L>
+nnoremap <C-H> <C-W><C-H>
+
+" --------------------------------------------------------------------------
+" Window Navigation (Terminal Mode)
+" --------------------------------------------------------------------------
+" Same navigation works in terminal mode
+tnoremap <C-J> <C-W><C-J>
+tnoremap <C-K> <C-W><C-K>
+tnoremap <C-L> <C-W><C-L>
+tnoremap <C-H> <C-W><C-H>
+
+" --------------------------------------------------------------------------
+" Window Resizing (Normal Mode)
+" --------------------------------------------------------------------------
+" \wh - Maximize window height
+" \wv - Maximize window width
+" \we - Equalize all window sizes
+" \wl - Decrease width by 20 columns
+" \wr - Increase width by 20 columns
+nnoremap <leader>wh <C-W>_
+nnoremap <leader>wv <C-W>\|
+nnoremap <leader>we <C-W>=
+nnoremap <leader>wl 20<C-W><
+nnoremap <leader>wr 20<C-W>>
+
+" --------------------------------------------------------------------------
+" Window Resizing (Terminal Mode)
+" --------------------------------------------------------------------------
+tnoremap <leader>wh <C-W>_
+tnoremap <leader>wv <C-W>\|
+tnoremap <leader>we <C-W>=
+tnoremap <leader>wl 20<C-W><
+tnoremap <leader>wr 20<C-W>>
+
+" --------------------------------------------------------------------------
+" Terminal
+" --------------------------------------------------------------------------
+" \th - Open terminal in horizontal split
+" \tv - Open terminal in vertical split
+" jk  - Exit terminal mode (return to normal mode)
+" Ctrl+V - Paste from clipboard in terminal
+nnoremap <leader>th :term<CR>
+nnoremap <leader>tv :vert term<CR>
+tnoremap jk <C-\><C-N>
+tnoremap <C-v> <C-W>"+
+
+" --------------------------------------------------------------------------
+" File and Buffer Navigation
+" --------------------------------------------------------------------------
+" \f - FZF search for git-tracked files
+" ;  - FZF search for open buffers
+" \n - Open Ranger file explorer
+nnoremap <leader>f :GFiles<CR>
+nnoremap ; :Buffers<CR>
+nnoremap <leader>n :Ranger<CR>
+
+" --------------------------------------------------------------------------
+" Code Intelligence (ALE)
+" --------------------------------------------------------------------------
+" \b - Go to definition (jump to where symbol is defined)
+" \r - Find references (show all usages of symbol)
+" \R - Rename symbol (refactor across files)
+" \t - Symbol search (search for symbol by name)
+" \a - Code action (quick fixes, refactoring options)
+" K  - Hover documentation (show info about symbol under cursor)
+" ]e - Jump to next error or warning
+" [e - Jump to previous error or warning
+nnoremap <leader>b :ALEGoToDefinition<CR>
+nnoremap <leader>r :ALEFindReferences<CR>
+nnoremap <leader>R :ALERename<CR>
+nnoremap <leader>t :ALESymbolSearch<space>
+nnoremap <leader>a :ALECodeAction<CR>
+nnoremap K :ALEHover<CR>
+nnoremap ]e :ALENextWrap<CR>
+nnoremap [e :ALEPreviousWrap<CR>
+
+" --------------------------------------------------------------------------
+" Git (GitGutter)
+" --------------------------------------------------------------------------
+" ]h  - Jump to next changed hunk
+" [h  - Jump to previous changed hunk
+" \hs - Stage the current hunk (git add just this change)
+" \hu - Undo the current hunk (revert to last commit)
+" \hp - Preview the hunk (see what changed)
+nnoremap ]h :GitGutterNextHunk<CR>
+nnoremap [h :GitGutterPrevHunk<CR>
+nnoremap <leader>hs :GitGutterStageHunk<CR>
+nnoremap <leader>hu :GitGutterUndoHunk<CR>
+nnoremap <leader>hp :GitGutterPreviewHunk<CR>
+
+" --------------------------------------------------------------------------
+" Code Structure
+" --------------------------------------------------------------------------
+" \s - Toggle Tagbar (shows functions, classes, etc.)
+nnoremap <leader>s :TagbarToggle<CR>
+
+" --------------------------------------------------------------------------
+" Search
+" --------------------------------------------------------------------------
+" \<space> - Clear search highlighting
+nnoremap <leader><space> :nohlsearch<CR>
+
+" --------------------------------------------------------------------------
+" Editing
+" --------------------------------------------------------------------------
+" S - Replace word under cursor with contents of register 0
+"     (register 0 contains last yanked text, not deleted text)
+nnoremap S diw"0P
+
+
+" ============================================================================
+" SECTION 13: LANGUAGE-SPECIFIC SETTINGS
+" ============================================================================
+
+" --------------------------------------------------------------------------
+" Plain Text
+" --------------------------------------------------------------------------
+" Show line at column 80, auto-wrap at 80 characters
 au Filetype txt setlocal colorcolumn=80 textwidth=80
 
+" --------------------------------------------------------------------------
+" Python
+" --------------------------------------------------------------------------
 augroup ft_python
     au!
 
-    " Set folding preferences
+    " Folding: indent-based but disabled by default
+    " Use 'za' to toggle fold, 'zM' to close all, 'zR' to open all
     au FileType python setlocal foldmethod=indent nofoldenable foldcolumn=0 foldnestmax=10 foldlevel=10
 
-    " Highlight flake8 max-line-length and set text width to allow automatic
-    " line wrapping
+    " Show line at column 120, auto-wrap at 120 characters
     au Filetype python setlocal colorcolumn=120 textwidth=120
 
-    " Python breakpoint
+    " \x - Insert pudb debugger breakpoint above current line
     autocmd FileType python nnoremap <buffer> <leader>x Oimport pudb; pudb.set_trace()<esc>
 augroup END
 
+
+" ============================================================================
+" SECTION 14: CUSTOM COMMANDS AND FUNCTIONS
+" ============================================================================
+
+" --------------------------------------------------------------------------
+" Database
+" --------------------------------------------------------------------------
+" :DBsp - Execute query using the database connection in g:db
 command! DBsp :DB g:db
 
+" --------------------------------------------------------------------------
+" Smart Grep
+" --------------------------------------------------------------------------
+" Search for patterns in files with the same extension as current file
+"
+" :SG pattern      - Search for 'pattern' in all matching files
+" :SG pattern dir  - Search for 'pattern' in 'dir' only
+" :AG              - Search for word under cursor
+" :AG dir          - Search for word under cursor in 'dir'
+
 function CastRoot(...)
-	if a:0 == 0
-		return ""
-	else
-		return "".expand(a:1)."/"
-	endif
+    if a:0 == 0
+        return ""
+    else
+        return "".expand(a:1)."/"
+    endif
 endfunction
 
 function SmartGrep(...)
-	if a:0 == 0
-		echo "Need at least an argument"
-		return
-	else
-		if a:0 == 1
-			return 'noautocmd vimgrep /'.expand(a:1).'/gj **/*.'expand('%:e').''
-		else
-			return 'noautocmd vimgrep /'.expand(a:1).'/gj '.expand(a:2).'/**/*.'.expand('%:e').''
-		endif
-	endif
+    if a:0 == 0
+        echo "Need at least an argument"
+        return
+    else
+        if a:0 == 1
+            return 'noautocmd vimgrep /'.expand(a:1).'/gj **/*.'expand('%:e').''
+        else
+            return 'noautocmd vimgrep /'.expand(a:1).'/gj '.expand(a:2).'/**/*.'.expand('%:e').''
+        endif
+    endif
 endfunction
 
 command! -nargs=+ SG :execute SmartGrep(<f-args>) | copen
 
 command! -nargs=? AG :execute 'noautocmd vimgrep /'.expand('<cword>').'/gj '.expand(CastRoot(<f-args>)).'**/*.'.expand('%:e').'' | copen
 
-" Auto format rust files on save
-let g:rustfmt_autosave = 1
-" Force cargo check
-let g:rust_cargo_avoid_whole_workspace = 0
 
+" ============================================================================
+" SECTION 15: EXTRA CONFIGURATION
+" ============================================================================
+" Load additional vimrc files from $EXTRA_VIM environment variable
+" Set EXTRA_VIM to colon-separated paths, e.g.:
+"   export EXTRA_VIM="/path/to/work.vim:/path/to/project.vim"
 
 if exists("$EXTRA_VIM")
     for path in split($EXTRA_VIM, ':')
-	    exec "source ".path
+        exec "source ".path
     endfor
 endif
+
+
+" ============================================================================
+" QUICK REFERENCE CARD
+" ============================================================================
+"
+" NAVIGATION
+"   Ctrl+H/J/K/L    Move between splits (also works with tmux)
+"   \f              FZF file search (git files)
+"   ;               FZF buffer search
+"   \n              Open Ranger file explorer
+"   \s              Toggle Tagbar (code structure)
+"
+" CODE INTELLIGENCE (ALE)
+"   \b              Go to definition
+"   \r              Find references
+"   \R              Rename symbol
+"   \t              Symbol search
+"   \a              Code action
+"   K               Hover documentation
+"   ]e / [e         Next/previous error
+"
+" GIT
+"   ]h / [h         Next/previous hunk
+"   \hs             Stage hunk
+"   \hu             Undo hunk
+"   \hp             Preview hunk
+"
+" WINDOW MANAGEMENT
+"   \wh             Maximize height
+"   \wv             Maximize width
+"   \we             Equalize sizes
+"   \wl / \wr       Shrink/grow width
+"
+" TERMINAL
+"   \th             Open horizontal terminal
+"   \tv             Open vertical terminal
+"   jk              Exit terminal mode
+"
+" SEARCH
+"   /pattern        Search (case-insensitive by default)
+"   /Pattern        Search (case-sensitive if uppercase)
+"   \<space>        Clear search highlighting
+"   :SG pattern     Grep in files with same extension
+"   :AG             Grep word under cursor
+"
+" PYTHON
+"   \x              Insert pudb debugger
+"
+" ============================================================================
