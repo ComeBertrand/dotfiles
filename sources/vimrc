@@ -109,6 +109,7 @@ Plug 'francoiscabrol/ranger.vim'
 
 " Git
 Plug 'tpope/vim-fugitive'
+Plug 'airblade/vim-gitgutter'
 
 " Ansynchronous build and test dispatcher
 Plug 'tpope/vim-dispatch'
@@ -187,6 +188,7 @@ let g:ale_fix_on_save = 1
 nnoremap <leader>b :ALEGoToDefinition<CR>
 nnoremap <leader>r :ALEFindReferences<CR>
 nnoremap <leader>R :ALERename<CR>
+nnoremap <leader>t :ALESymbolSearch<space>
 nnoremap K :ALEHover<CR>
 nnoremap <leader>a :ALECodeAction<CR>
 nnoremap ]e :ALENextWrap<CR>
@@ -247,6 +249,19 @@ nnoremap ; :Buffers<CR>
 
 " Turn off search highlight
 nnoremap <leader><space> :nohlsearch<CR>
+
+" Gitgutter
+set updatetime=100                     " Faster sign updates (default 4000ms)
+let g:gitgutter_map_keys = 0           " Disable default mappings
+
+" Navigation between hunks
+nnoremap ]h :GitGutterNextHunk<CR>
+nnoremap [h :GitGutterPrevHunk<CR>
+
+" Stage/undo/preview hunks
+nnoremap <leader>hs :GitGutterStageHunk<CR>
+nnoremap <leader>hu :GitGutterUndoHunk<CR>
+nnoremap <leader>hp :GitGutterPreviewHunk<CR>
 
 
 " Remove line below the lightline
@@ -310,6 +325,7 @@ command! -nargs=? AG :execute 'noautocmd vimgrep /'.expand('<cword>').'/gj '.exp
 let g:rustfmt_autosave = 1
 " Force cargo check
 let g:rust_cargo_avoid_whole_workspace = 0
+
 
 if exists("$EXTRA_VIM")
     for path in split($EXTRA_VIM, ':')
