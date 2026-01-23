@@ -170,6 +170,7 @@
       vlc  # Video player
       nix-tree  # Packages vizualizer
       infisical  # Secret management
+      glab  # Gitlab CLI
     ];
   };
 
