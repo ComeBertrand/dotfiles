@@ -88,25 +88,26 @@ This is a **NixOS dotfiles repository** that manages system-wide and user-specif
 
 ### Core NixOS Configuration
 
-#### `configuration.nix` (Lines: 323)
+#### `configuration.nix`
 **Purpose:** Main system configuration entry point
-**Key Sections:**
-- **Lines 15-22:** Boot configuration (systemd-boot, EFI)
-- **Lines 25:** Hostname set to "wiremind"
-- **Lines 42-58:** Locale (Europe/Paris timezone, FR locale settings)
-- **Lines 61-97:** Display server (X11 + i3 window manager, manual start)
-- **Lines 128-129:** Docker virtualization enabled
-- **Lines 132-174:** User account "cbertrand" with package list
-- **Lines 176-237:** Home Manager integration (dotfile linking)
-- **Lines 240-247:** Unfree and insecure package permissions
-- **Lines 249-268:** System-wide packages (Python 3.12, uv, vim, Claude Code, etc.)
-- **Lines 280-293:** nix-ld for pre-built executables (important for ruff, etc.)
+
+**Key Areas:**
+- Boot configuration (systemd-boot, EFI)
+- System hostname and networking
+- Locale and timezone settings
+- Display server configuration (X11 + i3 window manager)
+- Virtualization (Docker)
+- User account management and package installation
+- Home Manager integration for dotfile management
+- Package permissions (unfree and insecure packages)
+- System-wide packages and tools
+- nix-ld for running pre-built executables
 
 **Important Notes:**
 - Uses `<home-manager/nixos>` module (must be in NIX_PATH)
 - Imports `../nix-work` (external work-specific config, not in repo)
-- X11 autorun disabled (line 77) - requires manual `startdm`
-- Contains unstable channel usage for claude-code, gemini-cli, codex
+- X11 autorun disabled - requires manual `startdm` to start display manager
+- Contains unstable channel usage for bleeding-edge packages
 
 #### `hardware-configuration.nix`
 **Purpose:** Auto-generated hardware detection
@@ -114,43 +115,32 @@ This is a **NixOS dotfiles repository** that manages system-wide and user-specif
 
 #### `sources/config.nix`
 **Purpose:** User-level nixpkgs configuration
-**Current State:** Permits insecure nodejs-14.21.3 and openssl-1.1.1u for legacy projects
+**Usage:** Allows specific package overrides and permissions for user-level nix commands
 
 ---
 
 ### Vim Configuration
 
-#### `sources/vimrc` (Lines: 689)
+#### `sources/vimrc`
 **Purpose:** Comprehensive Vim setup for polyglot development
-**Architecture:** Well-organized into 15 sections with inline documentation
+**Architecture:** Well-organized into sections with extensive inline documentation
 
 **Key Features:**
 - **Plugin Manager:** vim-plug (auto-installs if missing)
-- **LSP/Linting:** ALE with language-specific linters
-  - Python: ruff + pyright
-  - Rust: rust-analyzer
-  - TypeScript: tsserver + eslint
-- **Completion:** ALE-powered LSP completion
-- **Git:** vim-fugitive + vim-gitgutter
-- **Navigation:** FZF (fuzzy finder), Ranger, Tagbar
-- **AI:** GitHub Copilot integration
-- **Testing:** vim-test + vim-dispatch
-- **Colorscheme:** Gruvbox dark
-
-**Critical Keybindings (Leader = `\`):**
-- `\b` - Go to definition (ALE)
-- `\r` - Find references (ALE)
-- `\R` - Rename symbol (ALE)
-- `\f` - FZF file search
-- `\n` - Ranger file explorer
-- `\tn/tf/ts/tl` - Test nearest/file/suite/last
-- `Ctrl+H/J/K/L` - Navigate splits (tmux-aware)
+- **LSP/Linting:** ALE with async linting and language servers for Python, Rust, TypeScript
+- **Completion:** LSP-powered code completion
+- **Git Integration:** Full Git workflow support with fugitive and gitgutter
+- **Navigation:** Fuzzy finding (FZF), file explorer (Ranger), code structure (Tagbar)
+- **AI Assistance:** GitHub Copilot integration
+- **Testing:** Integrated test runner support
+- **Visual:** Gruvbox dark theme with customized UI
 
 **Configuration Philosophy:**
-- Auto-fix on save enabled (`g:ale_fix_on_save = 1`)
-- Persistent undo enabled (`~/.vim/tmp.undo/`)
-- Hybrid line numbers (absolute + relative)
+- Auto-fix on save for supported languages
+- Persistent undo across sessions
+- Hybrid line numbers for efficient navigation
 - System clipboard integration
+- Extensive keybindings documented in file (Leader = `\`)
 
 ---
 
@@ -159,50 +149,43 @@ This is a **NixOS dotfiles repository** that manages system-wide and user-specif
 #### `sources/bashrc.sh`
 **Purpose:** Interactive bash shell initialization
 **Key Features:**
-- Loads `~/.bash_profile` (line 77-79)
-- Direnv hook enabled (line 93)
-- Auto-starts ssh-agent (lines 95-96)
-- Custom ls aliases with colors and grouping
+- Loads bash profile for login shell compatibility
+- Direnv integration for per-directory environments
+- SSH agent auto-start
+- Custom aliases with enhanced ls output
 
 #### `sources/bash_profile.sh`
-**Purpose:** Login shell initialization (sources PATH, aliases, prompt)
+**Purpose:** Login shell initialization (sources PATH, aliases, prompt configuration)
 
 #### `sources/aliases.sh`
-**Purpose:** Shell command aliases
-**Current Aliases:**
-- `clippy` - Cargo clippy with strict settings (`-D warnings -A clippy::new_without_default`)
+**Purpose:** Custom shell command aliases and shortcuts
 
 #### `sources/gitconfig.conf`
-**Purpose:** Git user configuration
-**Key Settings:**
-- User: Come Bertrand <come.bertrand@protonmail.com>
-- Color UI: auto
-- Alias: `git tree` - Pretty log graph
+**Purpose:** Git user configuration and custom aliases
 
 ---
 
 ### Utility Scripts
 
 #### `recrank.sh`
-**Purpose:** Main rebuild script for NixOS configuration
-**Command:** `sudo nixos-rebuild switch -I nixos-config=configuration.nix --verbose`
-**Usage:** Run from repository root after making configuration changes
+**Purpose:** Main rebuild script for applying NixOS configuration changes
+**Usage:** Run from repository root after editing configuration files
 
 #### `sources/scripts/screenz`
 **Purpose:** Automatically configure monitor layout
-**Usage:** Run `screenz` when monitors change
+**Usage:** Run when monitors are connected/disconnected
 
 #### `sources/scripts/switchkb`
 **Purpose:** Toggle between US and FR keyboard layouts
-**Usage:** Bind to hotkey in i3config for quick switching
+**Usage:** Typically bound to i3 hotkey for quick switching
 
 #### `sources/scripts/startdm`
 **Purpose:** Manually start X11 display manager
-**Context:** Required because `services.xserver.autorun = false` in configuration.nix
+**Context:** Required because X11 autorun is disabled
 
 #### `sources/scripts/setexclude`
-**Purpose:** Configure `.git/info/exclude` for custom local ignores
-**Usage:** Run in new git repositories to set up project-specific ignores
+**Purpose:** Configure git local excludes
+**Usage:** Run in new repositories to set up project-specific ignore patterns
 
 ---
 
@@ -216,7 +199,7 @@ This is a **NixOS dotfiles repository** that manages system-wide and user-specif
 
 2. **Test Changes**
    ```bash
-   # Dry-run (optional, not very helpful per README line 61)
+   # Dry-run (optional, see README for details)
    sudo bash -x $(nix-build --no-out-link '<nixos/nixos>' -A system -I nixos-config=configuration.nix)/activate
 
    # Apply changes
@@ -237,18 +220,18 @@ This is a **NixOS dotfiles repository** that manages system-wide and user-specif
 ### Adding New Packages
 
 **User Packages** (installed for user cbertrand only):
-- Edit `configuration.nix` line 136-173 under `users.users.cbertrand.packages`
-- Add package from nixpkgs, e.g., `my-package`
+- Edit `configuration.nix` under `users.users.cbertrand.packages`
+- Add package from nixpkgs
 
 **System Packages** (available to all users):
-- Edit `configuration.nix` line 249-268 under `environment.systemPackages`
+- Edit `configuration.nix` under `environment.systemPackages`
 - For unstable packages, use pattern: `unstable.package-name`
 
 **Unfree Packages:**
-- Already allowed globally (line 240: `nixpkgs.config.allowUnfree = true`)
+- Already allowed globally via `nixpkgs.config.allowUnfree`
 
 **Insecure Packages:**
-- Add to `nixpkgs.config.permittedInsecurePackages` (lines 244-247)
+- Add to `nixpkgs.config.permittedInsecurePackages` in `configuration.nix`
 - Also update `sources/config.nix` for user-level commands
 
 ### Adding New Dotfiles
@@ -362,11 +345,11 @@ in
 
 ### Adding New Language Support
 
-1. **Add vim plugin** to `sources/vimrc` in plug#begin() section
-2. **Configure ALE linters** in `g:ale_linters` dictionary
-3. **Configure ALE fixers** in `g:ale_fixers` dictionary
-4. **Add language-specific settings** in Section 13 (Language-Specific Settings)
-5. **Ensure system packages installed** in `configuration.nix`
+1. **Add vim plugin** to `sources/vimrc` in the plug#begin() section
+2. **Configure ALE linters** in the `g:ale_linters` dictionary
+3. **Configure ALE fixers** in the `g:ale_fixers` dictionary
+4. **Add language-specific settings** in the language-specific settings section
+5. **Ensure required LSP/linter packages** are installed in `configuration.nix`
 
 ---
 
@@ -536,7 +519,7 @@ sudo nix-channel --update
 ### External Dependencies
 
 **Not in Repository:**
-- `../nix-work` - Work-specific configuration (imported in configuration.nix line 12)
+- `../nix-work` - Work-specific configuration (imported in configuration.nix)
 - Home Manager channel (must be added manually)
 - Unstable channel (for bleeding-edge packages)
 
@@ -547,17 +530,17 @@ sudo nix-channel --update
 
 ### Performance Considerations
 
-- **nix-ld enabled** (lines 280-293) - Allows pre-built executables
-- **ALE async** - Linting doesn't block editing
-- **Persistent undo** - Undo files stored, can grow large
-- **Git with submodules** - Be aware of .gitignore (only vim swap files)
+- **nix-ld enabled** - Allows running pre-built executables
+- **ALE async linting** - Non-blocking, maintains editing responsiveness
+- **Persistent undo** - Undo files stored indefinitely, can accumulate over time
+- **Git configuration** - Optimized for performance, be aware of .gitignore patterns
 
 ### Common Pitfalls to Avoid
 
-1. **DON'T forget `sudo` with nix-channel** - It won't work otherwise
-2. **DON'T use -uall flag with git status** - Can cause memory issues (per vimrc line 333)
-3. **DON'T modify hardware-configuration.nix** - Auto-generated file
-4. **DON'T use `--no-edit` with git rebase** - Not a valid option
+1. **DON'T forget `sudo` with nix-channel** - User-level channel commands won't work
+2. **DON'T use -uall flag with git status** - Can cause memory issues on large repos
+3. **DON'T modify hardware-configuration.nix** - Auto-generated, regenerate if needed
+4. **DON'T use `--no-edit` with git rebase** - Not a valid option for git rebase
 5. **DON'T use interactive flags** (`-i`) with git commands in automation
 
 ### Helpful Patterns
@@ -592,7 +575,7 @@ packages = with pkgs; [
 ### Response Format Preferences
 
 - **Be concise but complete**
-- **Show exact file locations** with line numbers when referencing code
+- **Reference files clearly** - Mention specific configuration sections or settings by name
 - **Provide commands ready to run** (no placeholders like `<path>` if actual path is known)
 - **Explain NixOS-specific concepts** (declarative, channels, generations)
 - **Test instructions** before suggesting complex changes
@@ -638,7 +621,6 @@ packages = with pkgs; [
 ## Version History
 
 - **2026-01-23:** Initial CLAUDE.md creation
-- Document reflects state at commit `a6d59ae` (feat: add vim-test to vimrc)
 
 ---
 
@@ -647,10 +629,9 @@ packages = with pkgs; [
 When updating this document:
 1. Update "Last Updated" date at top
 2. Verify NixOS version and state version
-3. Check that package lists are current
-4. Verify external URLs are still valid
-5. Update commit references in Version History
-6. Test all command examples in a safe environment
+3. Verify external URLs are still valid
+4. Test all command examples in a safe environment
+5. Keep descriptions focused on purpose rather than specific implementation details
 
 ---
 
