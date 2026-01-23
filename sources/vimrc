@@ -1,7 +1,7 @@
 " Basic options
 
 set encoding=utf-8
-set fileencoding=utif-8
+set fileencoding=utf-8
 set nocompatible
 set clipboard=unnamedplus
 
@@ -118,7 +118,6 @@ Plug 'junegunn/rainbow_parentheses.vim'
 
 " Tagbar
 Plug 'majutsushi/tagbar'
-Plug 'craigemery/vim-autotag'
 
 " Fuzzy finder
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all'}
@@ -170,7 +169,29 @@ let g:ale_sign_error = '•'
 let g:ale_sign_warning = '•'
 
 highlight ALEErrorSign ctermfg=9 ctermbg=18
-highlight ALEWarningSigne ctermfg=11 ctermbg=18
+highlight ALEWarningSign ctermfg=11 ctermbg=18
+
+let g:ale_linters = {
+\   'python': ['ruff', 'pyright'],
+\   'rust': ['analyzer'],
+\   'typescript': ['tsserver', 'eslint'],
+\}
+let g:ale_fixers = {
+\   'python': ['ruff', 'ruff_format'],
+\   'rust': ['rustfmt'],
+\   'typescript': ['prettier', 'eslint'],
+\}
+let g:ale_completion_enabled = 1
+let g:ale_fix_on_save = 1
+
+nnoremap <leader>b :ALEGoToDefinition<CR>
+nnoremap <leader>r :ALEFindReferences<CR>
+nnoremap <leader>R :ALERename<CR>
+nnoremap K :ALEHover<CR>
+nnoremap <leader>a :ALECodeAction<CR>
+nnoremap ]e :ALENextWrap<CR>
+nnoremap [e :ALEPreviousWrap<CR>
+
 
 " Ranger Disable default key mapping
 let g:ranger_map_keys = 0
@@ -222,18 +243,11 @@ nnoremap <leader>s :TagbarToggle<CR>
 
 " Fuzzy search
 nnoremap <leader>f :GFiles<CR>
-nnoremap <leader>t :Tags<CR>
 nnoremap ; :Buffers<CR>
-
-" Remove trailing whitespace on save
-autocmd BufWritePre * :%s/\s\+$//e
 
 " Turn off search highlight
 nnoremap <leader><space> :nohlsearch<CR>
 
-" Tags
-nnoremap <leader>b <C-]>
-nnoremap <leader>T :!ctags -R --exclude=.git --exclude=node_modules --exclude=tests --exclude=.mypy_cache --exclude=.ruff_cache --exclude=.gitlab --exclude=.pytest_cache .<CR>
 
 " Remove line below the lightline
 set noshowmode
@@ -263,10 +277,6 @@ augroup ft_python
 
     " Python breakpoint
     autocmd FileType python nnoremap <buffer> <leader>x Oimport pudb; pudb.set_trace()<esc>
-
-    if executable('black')
-	    autocmd FileType python set formatprg=black\ --quiet\ -
-    endif
 augroup END
 
 command! DBsp :DB g:db
@@ -286,7 +296,7 @@ function SmartGrep(...)
 	else
 		if a:0 == 1
 			return 'noautocmd vimgrep /'.expand(a:1).'/gj **/*.'expand('%:e').''
-		else:
+		else
 			return 'noautocmd vimgrep /'.expand(a:1).'/gj '.expand(a:2).'/**/*.'.expand('%:e').''
 		endif
 	endif
