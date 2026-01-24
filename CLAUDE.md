@@ -8,9 +8,9 @@
 
 ```bash
 ./recrank.sh                        # Apply configuration changes
-./upgrade.sh                        # Update all packages
-sudo nix-channel --update           # Update channels (MUST use sudo!)
-sudo nixos-rebuild switch           # Manual config rebuild
+./upgrade.sh                        # Update all packages (updates flake.lock)
+nix flake update                    # Update flake inputs only
+sudo nixos-rebuild switch --flake .#wiremind  # Manual flake rebuild
 
 # Utility scripts
 screenz                             # Configure monitors
@@ -35,9 +35,9 @@ environment.systemPackages = with pkgs; [
   my-system-package
 ];
 
-# Unstable package
+# Unstable package (from flake input)
 environment.systemPackages = with pkgs; [
-  unstable.bleeding-edge-package
+  pkgs-unstable.bleeding-edge-package
 ];
 ```
 
@@ -106,14 +106,7 @@ Real examples from this repo:
 
 ## Critical Rules (DON'T Skip These!)
 
-1. **ALWAYS use `sudo`** with `nix-channel` commands - user-level commands silently fail
-   ```bash
-   # ✅ CORRECT
-   sudo nix-channel --add <url> <name>
-
-   # ❌ WRONG - will fail silently
-   nix-channel --add <url> <name>
-   ```
+1. **Commit `flake.lock`** - This file pins exact versions for reproducibility. Always commit changes to it.
 
 2. **DON'T edit `hardware-configuration.nix`** - It's auto-generated. Regenerate with `nixos-generate-config` if needed.
 
@@ -133,10 +126,13 @@ Real examples from this repo:
 
 ```
 dotfiles/
+├── flake.nix                  # Flake definition (inputs & outputs)
+├── flake.lock                 # Pinned dependency versions (COMMIT THIS)
 ├── configuration.nix          # Main NixOS config (EDIT THIS)
 ├── hardware-configuration.nix # Auto-generated (DON'T EDIT)
-├── recrank.sh                 # Rebuild script
-├── upgrade.sh                 # Update script
+├── recrank.sh                 # Rebuild script (flake-based)
+├── upgrade.sh                 # Update script (updates flake.lock)
+├── nix-work/                  # Optional work module stub (override input)
 │
 └── sources/                   # All dotfiles live here
     ├── vimrc                  # Comprehensive Vim config
@@ -161,7 +157,8 @@ dotfiles/
 
 - **User:** cbertrand
 - **Hostname:** wiremind
-- **NixOS:** 24.05 (+ unstable channel for bleeding-edge)
+- **NixOS:** 25.05 (+ unstable flake input for bleeding-edge)
+- **Config Style:** Nix Flakes (reproducible builds via flake.lock)
 - **Window Manager:** i3
 - **Editor:** Vim with ALE (Python: ruff+pyright, Rust: rust-analyzer, TS: tsserver+eslint)
 - **Shell:** Bash with direnv
@@ -171,17 +168,15 @@ dotfiles/
 
 ## External Dependencies
 
-**Not in repo - must exist:**
-- `../nix-work` - Work-specific config (imported by configuration.nix)
-- Home Manager channel (release-24.05)
-- Unstable channel (nixos-unstable)
+**Optional (work-only):**
+- `../nix-work` - Work-specific config (scripts auto-override `nix-work` input)
 
-**Setup if missing:**
-```bash
-sudo nix-channel --add https://github.com/nix-community/home-manager/archive/release-24.05.tar.gz home-manager
-sudo nix-channel --add https://nixos.org/channels/nixos-unstable nixos-unstable
-sudo nix-channel --update
-```
+**Managed by flake.nix (no manual setup needed):**
+- nixpkgs 25.05 (stable)
+- nixpkgs-unstable (bleeding-edge packages)
+- home-manager release-25.05
+
+All dependencies are pinned in `flake.lock` for reproducibility.
 
 ---
 
@@ -254,12 +249,14 @@ echo "My script"
 ```
 
 **NixOS version upgrade:**
+```nix
+# In flake.nix - update nixpkgs input URL
+nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
+home-manager.url = "github:nix-community/home-manager/release-25.05";
+```
 ```bash
-# Update channel URLs to new version
-sudo nix-channel --list
-sudo nix-channel --add https://nixos.org/channels/nixos-25.05 nixos
-sudo nix-channel --update
-./upgrade.sh
+nix flake update
+./recrank.sh
 sudo reboot
 ```
 
@@ -267,16 +264,22 @@ sudo reboot
 
 ## When Things Break
 
-**Syntax error in configuration.nix:**
+**Syntax error in configuration.nix or flake.nix:**
 ```bash
-nix-instantiate --parse configuration.nix
-# Shows where syntax error is
+nix flake check
+# Shows where syntax/evaluation errors are
 ```
 
 **Rollback to previous generation:**
 ```bash
-nixos-rebuild --rollback
+sudo nixos-rebuild --rollback --flake .#wiremind
 # OR use boot menu to select previous generation
+```
+
+**Rollback to previous flake.lock:**
+```bash
+git checkout HEAD~1 -- flake.lock
+./recrank.sh
 ```
 
 **Vim plugins broken:**
@@ -301,4 +304,4 @@ For comprehensive details, see:
 
 ---
 
-**Last Updated:** 2026-01-23
+**Last Updated:** 2026-02-04

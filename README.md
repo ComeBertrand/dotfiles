@@ -3,11 +3,16 @@
 ## First step before running recrank: Install home manager
 
 ```
-$ sudo nix-channel --add https://github.com/nix-community/home-manager/archive/release-24.05.tar.gz home-manager
+$ sudo nix-channel --add https://github.com/nix-community/home-manager/archive/release-25.05.tar.gz home-manager
 $ sudo nix-channel --update
 ```
 
-(updated to the 24.05 version on 2024-07-10)
+## Flake 101
+
+- `nix flake show` — show what this flake exposes (configs, packages, apps).
+- `nix flake update` — refresh pinned inputs in `flake.lock`.
+- `sudo nixos-rebuild switch --flake .#wiremind` — rebuild and activate the system from the flake.
+- `nix flake check` — evaluate the flake for errors and basic checks.
 
 
 ## Firefox config
@@ -60,4 +65,3 @@ Update the channels using new version, always use sudo before nix-channel otherw
 
 Warning -> not that helpful actually
 Run `sudo bash -x $(nix-build --no-out-link '<nixos/nixos>' -A system -I nixos-config=configuration.nix)/activate`
-

@@ -1,8 +1,8 @@
 # CLAUDE.md - AI Assistant Guide for NixOS Dotfiles Repository
 
-**Last Updated:** 2026-01-23
+**Last Updated:** 2026-02-04
 **Repository Owner:** Come Bertrand
-**NixOS Version:** 24.05
+**NixOS Version:** 25.05
 **System State Version:** 23.05
 
 ---
@@ -26,7 +26,7 @@
 This is a **NixOS dotfiles repository** that manages system-wide and user-specific configuration for a development workstation. It uses:
 
 - **NixOS** for declarative system configuration
-- **Home Manager** (24.05) for user-level dotfile management
+- **Home Manager** (25.05) for user-level dotfile management
 - **i3 window manager** as the desktop environment
 - **Vim** as the primary text editor with extensive LSP/linting setup
 - **Bash** as the default shell
@@ -104,10 +104,10 @@ This is a **NixOS dotfiles repository** that manages system-wide and user-specif
 - nix-ld for running pre-built executables
 
 **Important Notes:**
-- Uses `<home-manager/nixos>` module (must be in NIX_PATH)
-- Imports `../nix-work` (external work-specific config, not in repo)
+- Home Manager module wired via flake (no NIX_PATH channel required)
+- Work module is an optional flake input (defaults to repo stub; override to `../nix-work`)
 - X11 autorun disabled - requires manual `startdm` to start display manager
-- Contains unstable channel usage for bleeding-edge packages
+- Uses `pkgs-unstable` from flake input for bleeding-edge packages
 
 #### `hardware-configuration.nix`
 **Purpose:** Auto-generated hardware detection
@@ -253,7 +253,7 @@ This is a **NixOS dotfiles repository** that manages system-wide and user-specif
 ### Channel Management
 
 **Current Channels:**
-- Main: nixos-24.05
+- Main: nixos-25.05
 - Unstable: nixos-unstable (for bleeding-edge packages)
 
 **Important:** ALWAYS use `sudo` with `nix-channel` commands:
@@ -422,7 +422,7 @@ Then add public key to GitHub, GitLab, etc.
 
 **First-time setup** (if not already installed):
 ```bash
-sudo nix-channel --add https://github.com/nix-community/home-manager/archive/release-24.05.tar.gz home-manager
+sudo nix-channel --add https://github.com/nix-community/home-manager/archive/release-25.05.tar.gz home-manager
 sudo nix-channel --update
 ```
 
@@ -518,10 +518,13 @@ sudo nix-channel --update
 
 ### External Dependencies
 
-**Not in Repository:**
-- `../nix-work` - Work-specific configuration (imported in configuration.nix)
-- Home Manager channel (must be added manually)
-- Unstable channel (for bleeding-edge packages)
+**Optional (work-only):**
+- `../nix-work` - Work-specific module (override `nix-work` input; repo ships stub)
+
+**Managed by flake inputs (no manual channels needed):**
+- nixpkgs 25.05 (stable)
+- nixpkgs-unstable (bleeding-edge packages)
+- home-manager release-25.05
 
 **When suggesting changes involving these:**
 - Mention the dependency clearly
