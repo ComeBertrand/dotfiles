@@ -2,14 +2,13 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, pkgs, pkgs-unstable, ... }:
 
 {
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
-      <home-manager/nixos>
-      ../nix-work
+      # Work-specific module is injected via flake input (nix-work).
     ];
 
   # Bootloader.
@@ -248,25 +247,20 @@
     "nodejs_14"
   ];
 
-  environment.systemPackages = with pkgs;
-  let
-    unstable = import <nixos-unstable> { config = { allowUnfree = true; };};
-  in
-
-   [
-     python312  # So that I can have an interactive python
-     uv  # python package manager
-     (vim_configurable.override { python3 = pkgs.python312; })
-     telepresence2  # Allow direct connection to cluster
-     killall  # To clean up processes
-     fzf  # Required for vim
-     wget
-     rxvt-unicode-unwrapped  # Terminal
-     system-config-printer
-     unstable.claude-code
-     unstable.gemini-cli
-     unstable.codex
-     dmidecode
+  environment.systemPackages = with pkgs; [
+    python312  # So that I can have an interactive python
+    uv  # python package manager
+    (vim_configurable.override { python3 = pkgs.python312; })
+    telepresence2  # Allow direct connection to cluster
+    killall  # To clean up processes
+    fzf  # Required for vim
+    wget
+    rxvt-unicode-unwrapped  # Terminal
+    system-config-printer
+    pkgs-unstable.claude-code
+    pkgs-unstable.gemini-cli
+    pkgs-unstable.codex
+    dmidecode
   ];
 
   environment.variables.EDITOR = "vim";
@@ -320,5 +314,8 @@
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "23.05"; # Did you read the comment?
+
+  # Enable Nix Flakes
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
 }
