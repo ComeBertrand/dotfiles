@@ -171,6 +171,7 @@
       nix-tree  # Packages vizualizer
       infisical  # Secret management
       glab  # Gitlab CLI
+      jq  # json reading for shell scripts
     ];
   };
 

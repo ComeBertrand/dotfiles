@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ -z "${1:-}" ]]; then
+    echo "Error: profile argument required" >&2
+    exit 1
+fi
+
+if [[ "$1" != "test" && "$1" != "dev" ]]; then
+    echo "Error: profile must be 'test' or 'dev'" >&2
+    exit 1
+fi
+
+docker compose --profile "$1" down -v

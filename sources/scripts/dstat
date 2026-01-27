@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+print_profile_status() {
+    local profile="$1"
+    local all_up=true
+    local any_up=false
+
+    # Get services that belong to this profile
+    local profile_services
+    profile_services=$(docker compose --profile "$profile" config --services 2>/dev/null) || {
+        echo "Profile $profile: Error"
+        return
+    }
+
+    if [[ -z "$profile_services" ]]; then
+        echo "Profile $profile: No services"
+        return
+    fi
+
+    # Get current container states
+    local ps_output
+    ps_output=$(docker compose ps -a --format json 2>/dev/null) || ps_output=""
+
+    local containers=()
+    while IFS= read -r service; do
+        [[ -z "$service" ]] && continue
+
+        local state="" health="" status_str
+
+        # Find this service in ps output
+        if [[ -n "$ps_output" ]]; then
+            local container_info
+            container_info=$(echo "$ps_output" | jq -r --arg svc "$service" 'select(.Service == $svc)' 2>/dev/null)
+
+            if [[ -n "$container_info" ]]; then
+                state=$(echo "$container_info" | jq -r '.State')
+                health=$(echo "$container_info" | jq -r '.Health // empty')
+            fi
+        fi
+
+        if [[ "$state" == "running" ]]; then
+            any_up=true
+            if [[ -n "$health" ]]; then
+                status_str="Up ($health)"
+            else
+                status_str="Up"
+            fi
+        else
+            all_up=false
+            status_str="Down"
+        fi
+
+        containers+=("  * $service: $status_str")
+    done <<< "$profile_services"
+
+    local profile_status
+    if $all_up; then
+        profile_status="Up"
+    elif $any_up; then
+        profile_status="Partial"
+    else
+        profile_status="Down"
+    fi
+
+    echo "Profile $profile: $profile_status"
+    printf '%s\n' "${containers[@]}"
+}
+
+for profile in test dev; do
+    print_profile_status "$profile"
+    echo
+done
