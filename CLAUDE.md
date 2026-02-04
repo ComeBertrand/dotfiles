@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-**NixOS declarative configuration for Python/Rust/TypeScript development with i3, Vim, and Kubernetes tooling.**
+**NixOS declarative configuration for Python/Rust/TypeScript development with i3, Vim/Neovim, and Kubernetes tooling.**
 
 ---
 
@@ -68,7 +68,23 @@ let g:plugin_setting = value
 
 Open Vim and run: `:PlugInstall`
 
-### Configure ALE for New Language
+### Add a Neovim Plugin
+
+```lua
+-- In sources/nvim/lua/plugins/init.lua - add to the return table
+{
+  "author/plugin-name",
+  config = function()
+    require("plugin-name").setup({
+      -- plugin configuration
+    })
+  end,
+},
+```
+
+Open Neovim - lazy.nvim will auto-install on startup.
+
+### Configure ALE for New Language (Vim)
 
 ```vim
 " In sources/vimrc - ALE configuration
@@ -81,7 +97,17 @@ let g:ale_fixers = {
 \}
 ```
 
-Install linter/formatter in `configuration.nix` packages.
+### Configure LSP for New Language (Neovim)
+
+```lua
+-- In sources/nvim/lua/plugins/init.lua - in the nvim-lspconfig config
+lspconfig.mylang_ls.setup({
+  on_attach = on_attach,
+  capabilities = capabilities,
+})
+```
+
+Install LSP server/linter/formatter in `configuration.nix` packages.
 
 ---
 
@@ -135,7 +161,16 @@ dotfiles/
 ├── nix-work/                  # Optional work module stub (override input)
 │
 └── sources/                   # All dotfiles live here
-    ├── vimrc                  # Comprehensive Vim config
+    ├── vimrc                  # Vim config (fallback editor)
+    ├── nvim/                  # Neovim config (primary editor)
+    │   ├── init.lua           # Entry point
+    │   └── lua/
+    │       ├── config/        # Core settings
+    │       │   ├── options.lua
+    │       │   ├── keymaps.lua
+    │       │   └── autocmds.lua
+    │       └── plugins/       # Plugin configs (lazy.nvim)
+    │           └── init.lua
     ├── bashrc.sh              # Bash interactive shell
     ├── bash_profile.sh        # Login shell init
     ├── aliases.sh             # Shell aliases
@@ -160,7 +195,8 @@ dotfiles/
 - **NixOS:** 25.05 (+ unstable flake input for bleeding-edge)
 - **Config Style:** Nix Flakes (reproducible builds via flake.lock)
 - **Window Manager:** i3
-- **Editor:** Vim with ALE (Python: ruff+pyright, Rust: rust-analyzer, TS: tsserver+eslint)
+- **Editor (primary):** Neovim with native LSP, Treesitter, lazy.nvim
+- **Editor (fallback):** Vim with ALE (Python: ruff+pyright, Rust: rust-analyzer, TS: tsserver+eslint)
 - **Shell:** Bash with direnv
 - **Timezone:** Europe/Paris
 
@@ -180,7 +216,52 @@ All dependencies are pinned in `flake.lock` for reproducibility.
 
 ---
 
-## Vim Quick Reference
+## Neovim Quick Reference
+
+**Leader key:** `\`
+
+```lua
+-- Navigation
+\f              Telescope git files
+;               Telescope buffers
+\g              Telescope live grep
+\n              Oil file explorer
+\s              Aerial code outline
+Ctrl+H/J/K/L    Navigate splits (tmux-aware)
+
+-- Code Intelligence (Native LSP)
+\b              Go to definition
+\r              Find references
+\R              Rename symbol
+\a              Code actions
+K               Hover documentation
+]d / [d         Next/prev diagnostic
+]e / [e         Next/prev error
+
+-- Git (Gitsigns)
+]h / [h         Next/prev hunk
+\hs             Stage hunk
+\hu             Undo hunk
+\hp             Preview hunk
+\hb             Blame line
+
+-- Testing (vim-test)
+\tn             Run nearest test
+\tf             Run test file
+\ts             Run test suite
+\tl             Run last test
+
+-- Python specific
+\x              Insert pudb breakpoint
+
+-- Plugin management
+:Lazy           Open lazy.nvim UI
+:Mason          Open Mason LSP installer (if needed)
+```
+
+---
+
+## Vim Quick Reference (Fallback)
 
 **Leader key:** `\`
 
@@ -282,6 +363,19 @@ git checkout HEAD~1 -- flake.lock
 ./recrank.sh
 ```
 
+**Neovim plugins broken:**
+```vim
+:Lazy restore   " Restore plugins to lockfile state
+:Lazy clean     " Remove unused plugins
+:Lazy sync      " Install/update plugins
+```
+
+**Neovim LSP not working:**
+- Check LSP server installed in configuration.nix
+- Run `:LspInfo` to see active LSP clients
+- Run `:checkhealth` for diagnostics
+- Check `:messages` for errors
+
 **Vim plugins broken:**
 ```vim
 :PlugClean      " Remove unused
@@ -289,7 +383,7 @@ git checkout HEAD~1 -- flake.lock
 :PlugUpdate     " Update all
 ```
 
-**ALE not working:**
+**ALE not working (Vim):**
 - Check linter/formatter installed in configuration.nix
 - Run `:ALEInfo` in Vim to see diagnostics
 - Verify `g:ale_linters` and `g:ale_fixers` dictionaries
