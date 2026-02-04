@@ -206,9 +206,18 @@
         source = ./sources/scripts;
         recursive = true;
       };
-      # Vim conf
+      # Vim conf (kept as fallback)
       ".vimrc" = {
         source = ./sources/vimrc;
+      };
+      # Neovim configuration
+      ".config/nvim" = {
+        source = ./sources/nvim;
+        recursive = true;
+      };
+      # Yazi configuration
+      ".config/yazi/keymap.toml" = {
+        source = ./sources/yazi_keymap.toml;
       };
       # Bash configuration files
       ".bashrc" = {
@@ -248,12 +257,16 @@
   ];
 
   environment.systemPackages = with pkgs; [
-    python312  # So that I can have an interactive python
+    python312
     uv  # python package manager
-    (vim_configurable.override { python3 = pkgs.python312; })
+    (vim_configurable.override { python3 = pkgs.python312; })  # Keep vim as fallback
+    neovim  # Modern editor with native LSP support
     telepresence2  # Allow direct connection to cluster
     killall  # To clean up processes
-    fzf  # Required for vim
+    fzf  # Required for vim and nvim
+    ripgrep  # Required for telescope.nvim live grep
+    fd  # Fast file finder for telescope.nvim
+    pkgs-unstable.yazi  # Terminal file manager for yazi.nvim
     wget
     rxvt-unicode-unwrapped  # Terminal
     system-config-printer
@@ -261,6 +274,18 @@
     pkgs-unstable.gemini-cli
     pkgs-unstable.codex
     dmidecode
+    gcc
+    gnumake
+    nodejs_22
+    # LSP servers for Neovim
+    pyright  # Python LSP
+    pkgs-unstable.rust-analyzer  # Rust LSP
+    nodePackages.typescript-language-server  # TypeScript LSP
+    lua-language-server  # Lua LSP
+    # Formatters/linters (shared with Vim ALE)
+    ruff  # Python linter/formatter
+    nodePackages.prettier  # JS/TS formatter
+    nodePackages.eslint  # JS/TS linter
   ];
 
   environment.variables.EDITOR = "vim";
