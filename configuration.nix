@@ -219,6 +219,9 @@
       ".config/yazi/keymap.toml" = {
         source = ./sources/yazi_keymap.toml;
       };
+      ".config/yazi/yazi.toml" = {
+        source = ./sources/yazi.toml;
+      };
       # Bash configuration files
       ".bashrc" = {
         source = ./sources/bashrc.sh;
