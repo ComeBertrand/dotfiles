@@ -23,3 +23,6 @@ echo ".aider*" >> $EXCLUDE_PATH
 
 # Git worktree directory
 echo "wt/*" >> $EXCLUDE_PATH
+
+# GTR config
+echo ".gtrconfig" >> $EXCLUDE_PATH
