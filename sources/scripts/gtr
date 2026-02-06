@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+action=$(echo -e "editor\nremove" | fzf --height=40% --reverse --prompt="Select action")
+target=$(git gtr list --porcelain | fzf | awk '{print $2}')
+
+if [[ $action == "editor" ]]; then
+    git gtr editor $target
+elif [[ $action == "remove" ]]; then
+    git gtr remove $target
+fi
