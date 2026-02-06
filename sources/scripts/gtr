@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
-action=$(echo -e "editor\nremove" | fzf --height=40% --reverse --prompt="Select action")
 target=$(git gtr list --porcelain | fzf | awk '{print $2}')
-
-if [[ $action == "editor" ]]; then
-    git gtr editor $target
-elif [[ $action == "remove" ]]; then
-    git gtr remove $target
+if [[ -n $target ]]; then
+    action=$(echo -e "editor\nremove" | fzf --height=40% --reverse --prompt="Select action")
+    if [[ $action == "editor" ]]; then
+        git gtr editor $target
+    elif [[ $action == "remove" ]]; then
+        git gtr rm $target
+    fi
+else
+    echo "No target selected. Exiting."
+    exit 1
 fi
+

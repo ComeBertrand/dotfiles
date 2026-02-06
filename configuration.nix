@@ -56,6 +56,12 @@
     LC_TIME = "fr_FR.UTF-8";
   };
 
+  services.resolved = {
+    enable = true;
+    dnssec = "allow-downgrade";
+    fallbackDns = [ "192.168.1.1" ]; # your current DNS
+  };
+
 
   services.displayManager = {
     # Enable GNOME
