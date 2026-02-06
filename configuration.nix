@@ -106,7 +106,7 @@
 
 
   # Enable sound with pipewire.
-  hardware.pulseaudio.enable = false;
+  services.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
@@ -154,7 +154,6 @@
       google-chrome  # Secondary browser
       unzip  # Unzip files
       gnupg  # Handle PGP
-      pinentry  # Required by gnupg
       visidata  # Useful for data analysis
       postman  # API testing
       gthumb  # Image manipulation
@@ -260,9 +259,9 @@
   ];
 
   environment.systemPackages = with pkgs; [
-    python312
+    python313
     uv  # python package manager
-    (vim_configurable.override { python3 = pkgs.python312; })  # Keep vim as fallback
+    (vim-full.override { python3 = pkgs.python313; })  # Keep vim as fallback
     neovim  # Modern editor with native LSP support
     telepresence2  # Allow direct connection to cluster
     killall  # To clean up processes
