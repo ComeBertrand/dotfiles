@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# dcs - Docker Compose Services helper
+# Usage: run from anywhere inside a project with a compose.yaml
+
+set -euo pipefail
+
+# Walk up to find compose.yaml
+find_compose() {
+    local dir="$PWD"
+    while [[ "$dir" != "/" ]]; do
+        for f in compose.yaml compose.yml docker-compose.yaml docker-compose.yml; do
+            if [[ -f "$dir/$f" ]]; then
+                echo "$dir/$f"
+                return
+            fi
+        done
+        dir=$(dirname "$dir")
+    done
+    echo "No compose file found" >&2
+    exit 1
+}
+
+compose_file=$(find_compose)
+compose_dir=$(dirname "$compose_file")
+
+# Extract profiles from compose file
+get_profiles() {
+    grep -oP '(?<=- )\w+' <<< "$(grep -A1 'profiles:' "$compose_file")" | sort -u
+}
+
+# Pick action
+action=$(printf "up\ndown\nreset\nstatus\nlogs" | fzf --height=40% --reverse --prompt="action: ")
+[[ -z "$action" ]] && exit 0
+
+# Status doesn't need a profile
+if [[ "$action" == "status" ]]; then
+    docker compose -f "$compose_file" ps
+    exit 0
+fi
+
+# Pick profile
+profiles=$(get_profiles)
+profile=$(echo "$profiles" | fzf --height=40% --reverse --prompt="profile: ")
+[[ -z "$profile" ]] && exit 0
+
+cd "$compose_dir"
+
+case "$action" in
+    up)
+        docker compose -f "$compose_file" --profile "$profile" up -d
+        ;;
+    down)
+        docker compose -f "$compose_file" --profile "$profile" down
+        ;;
+    reset)
+        docker compose -f "$compose_file" --profile "$profile" down -v
+        docker compose -f "$compose_file" --profile "$profile" up -d
+        ;;
+    logs)
+        docker compose -f "$compose_file" --profile "$profile" logs -f
+        ;;
+esac
