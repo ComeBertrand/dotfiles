@@ -59,8 +59,9 @@
   services.resolved = {
     enable = true;
     dnssec = "allow-downgrade";
-    fallbackDns = [ "192.168.1.1" ]; # your current DNS
-  };
+    fallbackDns = [ "192.168.1.1" ];  # demote router to fallback
+  };# Tell NetworkManager to prepend these as per-link DNS
+  networking.networkmanager.insertNameservers = [ "8.8.8.8" "1.1.1.1" ];
 
 
   services.displayManager = {
