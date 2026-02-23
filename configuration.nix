@@ -34,8 +34,6 @@
   # networking.proxy.default = "http://user:password@proxy:port/";
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
-  # Enable networking
-  networking.networkmanager.enable = true;
 
 
   # Set your time zone.
@@ -61,7 +59,13 @@
     dnssec = "allow-downgrade";
     fallbackDns = [ "192.168.1.1" ];  # demote router to fallback
   };# Tell NetworkManager to prepend these as per-link DNS
-  networking.networkmanager.insertNameservers = [ "8.8.8.8" "1.1.1.1" ];
+
+  # Enable networking
+  networking.networkmanager = {
+    enable = true;
+    dns = "systemd-resolved";
+    insertNameservers = [ "8.8.8.8" "1.1.1.1" ];
+  };
 
 
   services.displayManager = {
