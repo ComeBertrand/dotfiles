@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# claude-notify - Desktop notification hook for Claude Code
+# Sends dunst notifications when Claude needs attention or finishes work.
+# No sounds - visual notifications only.
+#
+# Receives JSON on stdin from Claude Code hooks system.
+# Used for both Notification and Stop events.
+
+set -euo pipefail
+
+input=$(cat)
+
+event=$(echo "$input" | jq -r '.hook_event_name // empty')
+message=$(echo "$input" | jq -r '.message // empty')
+title=$(echo "$input" | jq -r '.title // empty')
+cwd=$(echo "$input" | jq -r '.cwd // empty')
+project=$(basename "${cwd:-unknown}")
+
+case "$event" in
+    Notification)
+        # Use title from Claude if provided, otherwise generic
+        notify_title="${title:-Claude Code}"
+        notify_body="${message:-Needs your attention}"
+        # Permission prompts get critical urgency (stay visible until dismissed)
+        urgency="critical"
+        ;;
+    Stop)
+        notify_title="Claude Code"
+        notify_body="Task finished in ${project}"
+        urgency="normal"
+        ;;
+    *)
+        notify_title="Claude Code"
+        notify_body="${message:-Event: ${event}}"
+        urgency="normal"
+        ;;
+esac
+
+notify-send \
+    --urgency="$urgency" \
+    --app-name="claude-code" \
+    "$notify_title" \
+    "$notify_body"
