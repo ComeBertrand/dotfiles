@@ -208,10 +208,6 @@
       ".gnupg/gpg-agent.conf" = {
         source = ./sources/gpg-agent.conf;
       };
-      # X configs (colors)
-      ".Xresources" = {
-        source = ./sources/xresources;
-      };
       # Scripts to make available
       ".local/bin" = {
         source = ./sources/scripts;
