@@ -253,6 +253,10 @@
       ".config/kitty/kitty.conf" = {
         source = ./sources/kitty.conf;
       };
+      # Rofi launcher config
+      ".config/rofi/config.rasi" = {
+        source = ./sources/rofi-config.rasi;
+      };
       # Claude Code user settings (hooks, preferences)
       ".claude/settings.json" = {
         source = ./sources/claude-settings.json;
@@ -284,6 +288,7 @@
     wget
     kitty  # GPU-accelerated terminal
     git-prole  # Git worktree management
+    rofi  # Application launcher (dmenu replacement)
     system-config-printer
     # LLM coding agents (from numtide/llm-agents.nix, auto-updated daily)
     llmPkgs.claude-code
