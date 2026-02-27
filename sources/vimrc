@@ -439,6 +439,12 @@ tnoremap <C-J> <C-W><C-J>
 tnoremap <C-K> <C-W><C-K>
 tnoremap <C-L> <C-W><C-L>
 tnoremap <C-H> <C-W><C-H>
+" Also map raw kitty keyboard protocol (CSI u) sequences so navigation
+" works after apps like Claude Code enable the protocol
+tnoremap <Esc>[104;5u <C-W><C-H>
+tnoremap <Esc>[106;5u <C-W><C-J>
+tnoremap <Esc>[107;5u <C-W><C-K>
+tnoremap <Esc>[108;5u <C-W><C-L>
 
 " --------------------------------------------------------------------------
 " Window Resizing (Normal Mode)
