@@ -8,22 +8,14 @@ local map = vim.keymap.set
 local opts = { noremap = true, silent = true }
 
 -- ============================================================================
--- WINDOW NAVIGATION (Normal Mode)
--- ============================================================================
--- Move between splits with Ctrl + direction
-map("n", "<C-h>", "<C-w><C-h>", opts)
-map("n", "<C-j>", "<C-w><C-j>", opts)
-map("n", "<C-k>", "<C-w><C-k>", opts)
-map("n", "<C-l>", "<C-w><C-l>", opts)
-
--- ============================================================================
 -- WINDOW NAVIGATION (Terminal Mode)
 -- ============================================================================
+-- Normal mode Ctrl+h/j/k/l handled by zellij-nav.nvim (see plugins/init.lua)
 -- Mark terminal as "was in insert" before navigating away
-map("t", "<C-h>", function() vim.b.terminal_insert = true; vim.cmd("stopinsert"); vim.cmd("TmuxNavigateLeft") end, opts)
-map("t", "<C-j>", function() vim.b.terminal_insert = true; vim.cmd("stopinsert"); vim.cmd("TmuxNavigateDown") end, opts)
-map("t", "<C-k>", function() vim.b.terminal_insert = true; vim.cmd("stopinsert"); vim.cmd("TmuxNavigateUp") end, opts)
-map("t", "<C-l>", function() vim.b.terminal_insert = true; vim.cmd("stopinsert"); vim.cmd("TmuxNavigateRight") end, opts)
+map("t", "<C-h>", function() vim.b.terminal_insert = true; vim.cmd("stopinsert"); vim.cmd("ZellijNavigateLeft") end, opts)
+map("t", "<C-j>", function() vim.b.terminal_insert = true; vim.cmd("stopinsert"); vim.cmd("ZellijNavigateDown") end, opts)
+map("t", "<C-k>", function() vim.b.terminal_insert = true; vim.cmd("stopinsert"); vim.cmd("ZellijNavigateUp") end, opts)
+map("t", "<C-l>", function() vim.b.terminal_insert = true; vim.cmd("stopinsert"); vim.cmd("ZellijNavigateRight") end, opts)
 
 -- ============================================================================
 -- WINDOW RESIZING (Normal Mode)

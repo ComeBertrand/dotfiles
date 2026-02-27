@@ -1,0 +1,145 @@
+// sources/zellij.kdl
+// Zellij configuration — tmux-like workflow with gruvbox theme
+//
+// Navigation model (with zellij-autolock):
+//   Plain terminal pane (normal mode): Ctrl+h/j/k/l moves between Zellij panes
+//   Neovim/Vim pane (locked mode):     Ctrl+h/j/k/l passes to Neovim (zellij-nav.nvim)
+//   Autolock switches modes automatically based on running process
+
+// Use bash as default shell
+default_shell "bash"
+
+// No decorative pane frames
+pane_frames false
+
+// Scrollback
+scroll_buffer_size 10000
+
+// No mouse (matching tmux config)
+mouse_mode false
+
+// Copy on select (like vim visual mode)
+copy_on_select true
+
+// Disable startup tips
+show_startup_tips false
+
+// Autolock plugin — auto-lock when nvim/vim/git/fzf run
+plugins {
+    autolock location="file:~/.config/zellij/plugins/zellij-autolock.wasm" {
+        is_enabled true
+        triggers "nvim|vim|git|fzf|zoxide|atuin"
+        reaction_seconds "0.3"
+        print_to_log false
+    }
+}
+
+load_plugins {
+    autolock
+}
+
+// Keybindings — tmux-like with Ctrl+b prefix
+keybinds clear-defaults=true {
+    // Normal mode: direct pane navigation + Ctrl+b for tmux mode
+    normal {
+        bind "Ctrl b" { SwitchToMode "tmux"; }
+
+        // Direct pane navigation (no prefix needed)
+        bind "Ctrl h" { MoveFocusOrTab "left"; }
+        bind "Ctrl j" { MoveFocus "down"; }
+        bind "Ctrl k" { MoveFocus "up"; }
+        bind "Ctrl l" { MoveFocusOrTab "right"; }
+
+        // Trigger autolock reassessment after running commands
+        bind "Enter" { WriteChars "\u{000D}"; MessagePlugin "autolock" {}; }
+    }
+
+    // Locked mode: everything passes to the running app (nvim, vim, git, fzf)
+    // Autolock handles switching automatically; Ctrl+g is manual escape hatch
+    locked {
+        bind "Ctrl g" { SwitchToMode "normal"; }
+    }
+
+    // Tmux mode: Ctrl+b prefix, then action
+    tmux {
+        bind "Esc" { SwitchToMode "normal"; }
+        bind "Ctrl b" { SwitchToMode "normal"; }
+
+        // Splits (| horizontal, - vertical, e stacked)
+        bind "|" { NewPane "right"; SwitchToMode "normal"; }
+        bind "-" { NewPane "down"; SwitchToMode "normal"; }
+        bind "e" { NewPane "stacked"; SwitchToMode "normal"; }
+
+        // Pane management
+        bind "x" { CloseFocus; SwitchToMode "normal"; }
+        bind "z" { ToggleFocusFullscreen; SwitchToMode "normal"; }
+
+        // Pane resizing (H/J/K/L)
+        bind "H" { Resize "Increase left"; }
+        bind "J" { Resize "Increase down"; }
+        bind "K" { Resize "Increase up"; }
+        bind "L" { Resize "Increase right"; }
+
+        // Tab management (Zellij-style)
+        bind "n" { NewTab; SwitchToMode "normal"; }
+        bind "h" { GoToPreviousTab; SwitchToMode "normal"; }
+        bind "l" { GoToNextTab; SwitchToMode "normal"; }
+        bind "r" { SwitchToMode "renametab"; TabNameInput 0; }
+        bind "1" { GoToTab 1; SwitchToMode "normal"; }
+        bind "2" { GoToTab 2; SwitchToMode "normal"; }
+        bind "3" { GoToTab 3; SwitchToMode "normal"; }
+        bind "4" { GoToTab 4; SwitchToMode "normal"; }
+        bind "5" { GoToTab 5; SwitchToMode "normal"; }
+        bind "6" { GoToTab 6; SwitchToMode "normal"; }
+        bind "7" { GoToTab 7; SwitchToMode "normal"; }
+        bind "8" { GoToTab 8; SwitchToMode "normal"; }
+        bind "9" { GoToTab 9; SwitchToMode "normal"; }
+
+        // Scroll mode
+        bind "[" { SwitchToMode "scroll"; }
+
+        // Detach
+        bind "d" { Detach; }
+
+        // Session manager
+        bind "s" { LaunchOrFocusPlugin "session-manager" { floating true; move_to_focused_tab true; }; SwitchToMode "normal"; }
+    }
+
+    // Rename tab mode
+    renametab {
+        bind "Esc" { UndoRenameTab; SwitchToMode "normal"; }
+        bind "Enter" { SwitchToMode "normal"; }
+    }
+
+    // Scroll mode: vi-like navigation
+    scroll {
+        bind "Esc" { SwitchToMode "normal"; }
+        bind "j" { ScrollDown; }
+        bind "k" { ScrollUp; }
+        bind "d" { HalfPageScrollDown; }
+        bind "u" { HalfPageScrollUp; }
+        bind "Ctrl f" { PageScrollDown; }
+        bind "Ctrl b" { PageScrollUp; }
+        bind "G" { ScrollToBottom; SwitchToMode "normal"; }
+        // Search
+        bind "s" { SwitchToMode "entersearch"; SearchInput 0; }
+    }
+
+    // Search entry mode (type query, Enter to search)
+    entersearch {
+        bind "Esc" { SwitchToMode "scroll"; }
+        bind "Enter" { SwitchToMode "search"; }
+    }
+
+    // Search results navigation
+    search {
+        bind "Esc" { SwitchToMode "scroll"; }
+        bind "n" { Search "down"; }
+        bind "p" { Search "up"; }
+        bind "c" { SearchToggleOption "CaseSensitivity"; }
+        bind "w" { SearchToggleOption "WholeWord"; }
+    }
+}
+
+// Gruvbox Dark Hard theme
+theme "gruvbox-dark"
