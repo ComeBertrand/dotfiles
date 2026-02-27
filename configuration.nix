@@ -4,6 +4,12 @@
 
 { config, pkgs, pkgs-unstable, llmPkgs, ... }:
 
+let
+  zellij-autolock = pkgs.fetchurl {
+    url = "https://github.com/fresh2dev/zellij-autolock/releases/download/0.2.2/zellij-autolock.wasm";
+    sha256 = "194fgd421w2j77jbpnq994y2ma03qzdlz932cxfhfznrpw3mdjb9";
+  };
+in
 {
   imports =
     [ # Include the results of the hardware scan.
@@ -147,6 +153,7 @@
       firefox  # browser
       git  # source control
       tmux  # terminal multiplexer
+      zellij  # terminal multiplexer (tmux replacement)
       ranger  # file manager
       docker-compose  # enable composing of containers
       slack  # communication platform
@@ -248,6 +255,14 @@
       # Tmux conf
       ".tmux.conf" = {
         source = ./sources/tmux.conf;
+      };
+      # Zellij config
+      ".config/zellij/config.kdl" = {
+        source = ./sources/zellij.kdl;
+      };
+      # Zellij autolock plugin (auto-lock when nvim/vim/git/fzf run)
+      ".config/zellij/plugins/zellij-autolock.wasm" = {
+        source = zellij-autolock;
       };
       # Kitty terminal config
       ".config/kitty/kitty.conf" = {

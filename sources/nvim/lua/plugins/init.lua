@@ -173,25 +173,19 @@ return {
   },
 
   -- ==========================================================================
-  -- NAVIGATION: Tmux Integration (same as Vim)
+  -- NAVIGATION: Zellij Integration (replaces vim-tmux-navigator)
   -- ==========================================================================
   {
-    "christoomey/vim-tmux-navigator",
-    init = function()
-      vim.g.tmux_navigator_no_mappings = 1
-    end,
-    cmd = {
-      "TmuxNavigateLeft",
-      "TmuxNavigateDown",
-      "TmuxNavigateUp",
-      "TmuxNavigateRight",
-    },
+    "swaits/zellij-nav.nvim",
+    lazy = true,
+    event = "VeryLazy",
     keys = {
-      { "<C-h>", "<cmd>TmuxNavigateLeft<CR>" },
-      { "<C-j>", "<cmd>TmuxNavigateDown<CR>" },
-      { "<C-k>", "<cmd>TmuxNavigateUp<CR>" },
-      { "<C-l>", "<cmd>TmuxNavigateRight<CR>" },
+      { "<C-h>", "<cmd>ZellijNavigateLeft<CR>", { silent = true, desc = "Navigate left" } },
+      { "<C-j>", "<cmd>ZellijNavigateDown<CR>", { silent = true, desc = "Navigate down" } },
+      { "<C-k>", "<cmd>ZellijNavigateUp<CR>", { silent = true, desc = "Navigate up" } },
+      { "<C-l>", "<cmd>ZellijNavigateRight<CR>", { silent = true, desc = "Navigate right" } },
     },
+    opts = {},
   },
 
   -- ==========================================================================

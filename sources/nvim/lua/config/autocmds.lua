@@ -199,6 +199,23 @@ autocmd({ "BufEnter", "WinEnter" }, {
 
 
 -- ============================================================================
+-- ZELLIJ: Unlock on exit
+-- ============================================================================
+-- When exiting Neovim inside Zellij, switch back to normal mode so autolock
+-- doesn't leave Zellij stuck in locked mode.
+augroup("zellij_unlock", { clear = true })
+
+autocmd("VimLeave", {
+  group = "zellij_unlock",
+  pattern = "*",
+  callback = function()
+    if vim.env.ZELLIJ then
+      vim.fn.system("zellij action switch-mode normal")
+    end
+  end,
+})
+
+-- ============================================================================
 -- EXTRA VIM: Load additional config from $EXTRA_VIM
 -- ============================================================================
 -- Supports loading extra Lua/Vim config files
