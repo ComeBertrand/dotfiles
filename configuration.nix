@@ -283,9 +283,13 @@
     wget
     rxvt-unicode-unwrapped  # Terminal
     system-config-printer
-    pkgs-unstable.claude-code
+    (writeShellScriptBin "claude" ''
+      exec ${nodejs_22}/bin/npx -y @anthropic-ai/claude-code "$@"
+    '')
     pkgs-unstable.gemini-cli
-    pkgs-unstable.codex
+    (writeShellScriptBin "codex" ''
+      exec ${nodejs_22}/bin/npx -y @openai/codex "$@"
+    '')
     dmidecode
     gcc
     gnumake
