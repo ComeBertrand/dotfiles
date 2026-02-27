@@ -208,7 +208,7 @@
       ".gnupg/gpg-agent.conf" = {
         source = ./sources/gpg-agent.conf;
       };
-      # X configs (colors + URxvt conf)
+      # X configs (colors)
       ".Xresources" = {
         source = ./sources/xresources;
       };
@@ -253,9 +253,9 @@
       ".tmux.conf" = {
         source = ./sources/tmux.conf;
       };
-      # URxvt conf
-      ".urxvt/ext/resize-font" = {
-        source = ./sources/rxvt-resize-font;
+      # Kitty terminal config
+      ".config/kitty/kitty.conf" = {
+        source = ./sources/kitty.conf;
       };
       # Claude Code user settings (hooks, preferences)
       ".claude/settings.json" = {
@@ -286,7 +286,7 @@
     fd  # Fast file finder for telescope.nvim
     pkgs-unstable.yazi  # Terminal file manager for yazi.nvim
     wget
-    rxvt-unicode-unwrapped  # Terminal
+    kitty  # GPU-accelerated terminal
     system-config-printer
     # LLM coding agents (from numtide/llm-agents.nix, auto-updated daily)
     llmPkgs.claude-code
