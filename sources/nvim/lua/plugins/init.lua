@@ -88,6 +88,13 @@ return {
 
       telescope.setup({
         defaults = {
+          layout_strategy = "vertical",
+          layout_config = {
+            vertical = {
+              preview_cutoff = 0,
+              preview_height = 0.5,
+            },
+          },
           mappings = {
             i = {
               ["<C-j>"] = "move_selection_next",
@@ -96,6 +103,10 @@ return {
           },
         },
         pickers = {
+          buffers = {
+            sort_mru = true,
+            ignore_current_buffer = true,
+          },
           find_files = {
             hidden = true,
           },
