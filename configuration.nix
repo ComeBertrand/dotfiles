@@ -1,8 +1,8 @@
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
-# and in the NixOS manual (accessible by running ‘nixos-help’).
+# and in the NixOS manual (accessible by running 'nixos-help').
 
-{ config, pkgs, pkgs-unstable, ... }:
+{ config, pkgs, pkgs-unstable, llmPkgs, ... }:
 
 {
   imports =
@@ -138,7 +138,7 @@
   # Enable docker
   virtualisation.docker.enable = true;
 
-  # Define a user account. Don't forget to set a password with ‘passwd’.
+  # Define a user account. Don't forget to set a password with 'passwd'.
   users.users.cbertrand = {
     isNormalUser = true;
     description = "cbertrand";
@@ -181,6 +181,7 @@
       infisical  # Secret management
       glab  # Gitlab CLI
       jq  # json reading for shell scripts
+      libnotify  # Desktop notifications (notify-send) for hooks
     ];
   };
 
@@ -256,6 +257,10 @@
       ".urxvt/ext/resize-font" = {
         source = ./sources/rxvt-resize-font;
       };
+      # Claude Code user settings (hooks, preferences)
+      ".claude/settings.json" = {
+        source = ./sources/claude-settings.json;
+      };
     };
   };
 
@@ -283,13 +288,10 @@
     wget
     rxvt-unicode-unwrapped  # Terminal
     system-config-printer
-    (writeShellScriptBin "claude" ''
-      exec ${nodejs_22}/bin/npx -y @anthropic-ai/claude-code "$@"
-    '')
-    pkgs-unstable.gemini-cli
-    (writeShellScriptBin "codex" ''
-      exec ${nodejs_22}/bin/npx -y @openai/codex "$@"
-    '')
+    # LLM coding agents (from numtide/llm-agents.nix, auto-updated daily)
+    llmPkgs.claude-code
+    llmPkgs.gemini-cli
+    llmPkgs.codex
     dmidecode
     gcc
     gnumake
@@ -330,6 +332,15 @@
     ];
   };
 
+  # Numtide binary cache for llm-agents (pre-built packages)
+  nix.settings = {
+    experimental-features = [ "nix-command" "flakes" ];
+    extra-substituters = [ "https://cache.numtide.com" ];
+    extra-trusted-public-keys = [
+      "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
+    ];
+  };
+
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
@@ -351,13 +362,10 @@
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
-  # on your system were taken. It‘s perfectly fine and recommended to leave
+  # on your system were taken. It's perfectly fine and recommended to leave
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "23.05"; # Did you read the comment?
-
-  # Enable Nix Flakes
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
 }

@@ -14,6 +14,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # LLM coding agents (claude-code, gemini-cli, codex, etc.)
+    # Auto-updated daily with binary cache from Numtide
+    llm-agents = {
+      url = "github:numtide/llm-agents.nix";
+    };
+
     # Optional work-specific module (override with --override-input nix-work)
     nix-work = {
       url = "path:./nix-work";
@@ -21,7 +27,7 @@
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, home-manager, ... }:
+  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, home-manager, llm-agents, ... }:
     let
       system = "x86_64-linux";
 
@@ -32,6 +38,9 @@
           allowUnfree = true;
         };
       };
+
+      # LLM agent packages from Numtide
+      llmPkgs = llm-agents.packages.${system};
 
       # Work-specific module (defaults to ./nix-work; override input for external)
       nixWorkPath =
@@ -45,7 +54,7 @@
         inherit system;
 
         specialArgs = {
-          inherit pkgs-unstable;
+          inherit pkgs-unstable llmPkgs;
         };
 
         modules = [
