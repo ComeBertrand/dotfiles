@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# devctx - Open a development context (project + worktree) in kitty
+#
+# Scans project directories for git worktrees (git-prole style)
+# and regular repos, lets you pick one via rofi, and opens a kitty
+# window in that directory.
+#
+# Usage: devctx
+# Typically bound to an i3 keybinding.
+
+set -euo pipefail
+
+PROJECT_DIRS=("$HOME/Workspace" "$HOME/Documents/perso/projects")
+# Add more project root directories above as needed
+
+# Gather all candidate directories
+candidates=()
+for root in "${PROJECT_DIRS[@]}"; do
+    [[ -d "$root" ]] || continue
+    for project in "$root"/*/; do
+        [[ -d "$project" ]] || continue
+        # Check if this is a git-prole bare repo (has .bare/)
+        if [[ -d "${project}.bare" ]]; then
+            # List worktrees
+            for wt in "$project"*/; do
+                [[ -d "$wt/.git" || -f "$wt/.git" ]] || continue
+                candidates+=("$wt")
+            done
+        elif [[ -d "${project}.git" ]]; then
+            # Regular git repo
+            candidates+=("$project")
+        fi
+    done
+done
+
+if [[ ${#candidates[@]} -eq 0 ]]; then
+    notify-send "devctx" "No projects found"
+    exit 1
+fi
+
+# Format for display: show relative to home
+display=()
+for c in "${candidates[@]}"; do
+    display+=("${c/#$HOME\//~/}")
+done
+
+# Pick via rofi
+selected=$(printf '%s\n' "${display[@]}" | rofi -dmenu -p "project" -i)
+[[ -z "$selected" ]] && exit 0
+
+# Expand ~ back
+target="${selected/#\~/$HOME}"
+
+# Open kitty in that directory
+kitty --directory "$target" --title "dev: $(basename "$(dirname "$target")")/$(basename "$target")" &
+
+disown

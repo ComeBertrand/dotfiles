@@ -1,0 +1,77 @@
+/* sources/rofi-config.rasi — Gruvbox Dark */
+/* Reset built-in theme */
+@theme "/dev/null"
+
+configuration {
+    modi: "drun,run,window";
+    show-icons: true;
+    terminal: "kitty";
+    font: "Hermit 12";
+}
+
+* {
+    bg:       #1d2021;
+    bg-alt:   #282828;
+    fg:       #ebdbb2;
+    fg-dim:   #a89984;
+    accent:   #458588;
+    urgent:   #cc241d;
+
+    background-color: transparent;
+    text-color:       @fg;
+}
+
+window {
+    width:            30%;
+    border:           2px;
+    border-color:     @accent;
+    padding:          10px;
+    background-color: @bg;
+}
+
+inputbar {
+    children:         [ prompt, entry ];
+    padding:          8px;
+    background-color: @bg-alt;
+}
+
+prompt {
+    padding:          0 8px 0 0;
+    text-color:       @accent;
+    background-color: inherit;
+}
+
+entry {
+    background-color: inherit;
+}
+
+listview {
+    lines:            8;
+    scrollbar:        false;
+    padding:          4px 0;
+    background-color: @bg;
+}
+
+element {
+    padding:          6px 8px;
+    background-color: @bg;
+    text-color:       @fg;
+}
+
+element alternate.normal {
+    background-color: @bg-alt;
+}
+
+element selected.normal {
+    background-color: @accent;
+    text-color:       @bg;
+}
+
+element-text {
+    background-color: inherit;
+    text-color:       inherit;
+}
+
+element-icon {
+    background-color: inherit;
+}
