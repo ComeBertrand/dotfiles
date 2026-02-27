@@ -19,10 +19,11 @@ map("n", "<C-l>", "<C-w><C-l>", opts)
 -- ============================================================================
 -- WINDOW NAVIGATION (Terminal Mode)
 -- ============================================================================
-map("t", "<C-h>", "<C-\\><C-n>:TmuxNavigateLeft<CR>", opts)
-map("t", "<C-j>", "<C-\\><C-n>:TmuxNavigateDown<CR>", opts)
-map("t", "<C-k>", "<C-\\><C-n>:TmuxNavigateUp<CR>", opts)
-map("t", "<C-l>", "<C-\\><C-n>:TmuxNavigateRight<CR>", opts)
+-- Mark terminal as "was in insert" before navigating away
+map("t", "<C-h>", function() vim.b.terminal_insert = true; vim.cmd("stopinsert"); vim.cmd("TmuxNavigateLeft") end, opts)
+map("t", "<C-j>", function() vim.b.terminal_insert = true; vim.cmd("stopinsert"); vim.cmd("TmuxNavigateDown") end, opts)
+map("t", "<C-k>", function() vim.b.terminal_insert = true; vim.cmd("stopinsert"); vim.cmd("TmuxNavigateUp") end, opts)
+map("t", "<C-l>", function() vim.b.terminal_insert = true; vim.cmd("stopinsert"); vim.cmd("TmuxNavigateRight") end, opts)
 
 -- ============================================================================
 -- WINDOW RESIZING (Normal Mode)
@@ -47,7 +48,7 @@ map("t", "<leader>wr", "<C-\\><C-n>20<C-w>>", opts)
 -- ============================================================================
 map("n", "<leader>th", ":split | terminal<CR>", opts)   -- Horizontal terminal
 map("n", "<leader>tv", ":vsplit | terminal<CR>", opts)  -- Vertical terminal
-map("t", "jk", "<C-\\><C-n>", opts)                     -- Exit terminal mode
+map("t", "<C-[>", function() vim.b.terminal_insert = false; vim.cmd("stopinsert") end, opts) -- Exit terminal mode
 map("t", "<C-v>", '<C-\\><C-n>"+pi', opts)              -- Paste in terminal
 
 -- ============================================================================
