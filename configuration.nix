@@ -310,7 +310,7 @@ in
     pkgs-unstable.yazi  # Terminal file manager for yazi.nvim
     wget
     kitty  # GPU-accelerated terminal
-    git-prole  # Git worktree management
+    jujutsu  # Git-compatible VCS frontend
     rofi  # Application launcher (dmenu replacement)
     system-config-printer
     # LLM coding agents (from numtide/llm-agents.nix, auto-updated daily)

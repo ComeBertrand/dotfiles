@@ -1,10 +1,7 @@
-// Default Zellij layout with tab-bar (top) and status-bar (bottom)
+// Default Zellij layout with compact-bar (tabs + mode in one line)
 layout {
-    pane size=1 borderless=true {
-        plugin location="zellij:tab-bar"
-    }
     pane
-    pane size=2 borderless=true {
-        plugin location="zellij:status-bar"
+    pane size=1 borderless=true {
+        plugin location="zellij:compact-bar"
     }
 }

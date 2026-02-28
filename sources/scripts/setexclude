@@ -21,8 +21,5 @@ echo "tags.safe" >> $EXCLUDE_PATH
 # Aider related excludes
 echo ".aider*" >> $EXCLUDE_PATH
 
-# Git worktree directory
-echo "wt/*" >> $EXCLUDE_PATH
-
-# GTR config
-echo ".gtrconfig" >> $EXCLUDE_PATH
+# Jujutsu
+echo ".jj/" >> $EXCLUDE_PATH
