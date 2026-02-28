@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-# devctx - Open a development context (project + worktree) in kitty
+# devctx - Open a development context (project) in kitty
 #
-# Scans project directories for git worktrees (git-prole style)
-# and regular repos, lets you pick one via rofi, and opens a kitty
-# window in that directory.
+# Scans project directories for git repos, lets you pick one via rofi,
+# and opens a kitty window in that directory.
 #
 # Usage: devctx
 # Typically bound to an i3 keybinding.
@@ -19,15 +18,7 @@ for root in "${PROJECT_DIRS[@]}"; do
     [[ -d "$root" ]] || continue
     for project in "$root"/*/; do
         [[ -d "$project" ]] || continue
-        # Check if this is a git-prole bare repo (has .bare/)
-        if [[ -d "${project}.bare" ]]; then
-            # List worktrees
-            for wt in "$project"*/; do
-                [[ -d "$wt/.git" || -f "$wt/.git" ]] || continue
-                candidates+=("$wt")
-            done
-        elif [[ -d "${project}.git" ]]; then
-            # Regular git repo
+        if [[ -d "${project}.git" ]]; then
             candidates+=("$project")
         fi
     done
