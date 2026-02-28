@@ -177,7 +177,7 @@ dotfiles/
     ├── aliases.sh             # Shell aliases
     ├── gitconfig.conf         # Git config
     ├── i3config.conf          # i3 window manager
-    ├── tmux.conf              # Tmux config
+    ├── zellij.kdl             # Zellij config
     ├── config.nix             # User nixpkgs config
     │
     └── scripts/               # Custom utilities
@@ -228,7 +228,7 @@ All dependencies are pinned in `flake.lock` for reproducibility.
 \g              Telescope live grep
 \n              Oil file explorer
 \s              Aerial code outline
-Ctrl+H/J/K/L    Navigate splits (tmux-aware)
+Ctrl+H/J/K/L    Navigate splits (zellij-aware)
 
 -- Code Intelligence (Native LSP)
 \b              Go to definition
@@ -272,7 +272,7 @@ K               Hover documentation
 ;               FZF buffer search
 \n              Ranger file explorer
 \s              Tagbar (code structure)
-Ctrl+H/J/K/L    Navigate splits (tmux-aware)
+Ctrl+H/J/K/L    Navigate splits (zellij-aware)
 
 " Code Intelligence (ALE)
 \b              Go to definition

@@ -62,7 +62,7 @@ This is a **NixOS dotfiles repository** that manages system-wide and user-specif
 │   ├── aliases.sh                 # Shell aliases (e.g., clippy alias)
 │   ├── direnvrc.sh                # Direnv custom functions
 │   ├── gitconfig.conf             # Git user config & aliases
-│   ├── tmux.conf                  # Tmux configuration
+│   ├── zellij.kdl                 # Zellij configuration
 │   ├── i3config.conf              # i3 window manager config
 │   ├── xresources                 # X11 resources (colors, URxvt)
 │   ├── gpg-agent.conf             # GPG agent configuration

@@ -152,8 +152,7 @@ in
     packages = with pkgs; [
       firefox  # browser
       git  # source control
-      tmux  # terminal multiplexer
-      zellij  # terminal multiplexer (tmux replacement)
+      zellij  # terminal multiplexer
       ranger  # file manager
       docker-compose  # enable composing of containers
       slack  # communication platform
@@ -251,10 +250,6 @@ in
       };
       ".aliases" = {
         source = ./sources/aliases.sh;
-      };
-      # Tmux conf
-      ".tmux.conf" = {
-        source = ./sources/tmux.conf;
       };
       # Zellij config
       ".config/zellij/config.kdl" = {
