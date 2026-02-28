@@ -14,7 +14,7 @@ return {
     config = function()
       require("gruvbox").setup({
         contrast = "hard",
-        transparent_mode = false,
+        transparent_mode = vim.env.ZELLIJ ~= nil,
       })
       vim.cmd("colorscheme gruvbox")
       vim.o.background = "dark"

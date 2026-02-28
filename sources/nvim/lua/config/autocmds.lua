@@ -105,17 +105,12 @@ autocmd("VimResized", {
   group = "fix_resize",
   pattern = "*",
   callback = function()
-    local win = vim.api.nvim_get_current_win()
-    local h = vim.api.nvim_win_get_height(win)
-    vim.api.nvim_win_set_height(win, h - 1)
-    vim.api.nvim_win_set_height(win, h)
-    local ls = vim.o.laststatus
-    vim.o.laststatus = 0
-    vim.schedule(function()
-      vim.o.laststatus = ls
+    vim.cmd("wincmd =")
+    vim.defer_fn(function()
+      vim.cmd("mode")
       require("lualine").refresh()
       vim.cmd("redraw!")
-    end)
+    end, 50)
   end,
 })
 

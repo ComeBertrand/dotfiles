@@ -45,6 +45,21 @@ map("t", "<C-[>", function() vim.b.terminal_insert = false; vim.cmd("stopinsert"
 map("t", "<C-v>", '<C-\\><C-n>"+pi', opts)              -- Paste in terminal
 
 -- ============================================================================
+-- ZELLIJ INTEGRATION
+-- ============================================================================
+-- \z - Toggle fullscreen for current zellij pane (works from nvim without
+--      leaving locked mode). Uses defer_fn to let zellij finish resizing
+--      before forcing a full terminal redraw.
+map("n", "<leader>z", function()
+  vim.fn.system("zellij action toggle-fullscreen")
+  vim.defer_fn(function()
+    vim.cmd("wincmd =")
+    vim.cmd("mode")
+    vim.cmd("redraw!")
+  end, 50)
+end, opts)
+
+-- ============================================================================
 -- SEARCH
 -- ============================================================================
 map("n", "<leader><space>", ":nohlsearch<CR>", opts)  -- Clear highlighting
@@ -62,6 +77,7 @@ map("n", "S", 'diw"0P', opts)
 -- NAVIGATION (defined here)
 --   Ctrl+H/J/K/L    Move between splits
 --   \wh/wv/we       Window sizing
+--   \z              Toggle zellij fullscreen
 --   \th/\tv         Open terminal
 --   jk              Exit terminal mode
 --

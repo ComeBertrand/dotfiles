@@ -494,7 +494,7 @@ Most of Phase 5 is already done:
 - ✅ Zellij installed and configured (`sources/zellij.kdl`, layouts, autolock)
 - ✅ Neovim migrated to `zellij-nav.nvim` (Ctrl+h/j/k/l works across panes)
 - ✅ Jujutsu installed (replaces git-prole worktrees)
-- ⬜ Tmux still installed alongside (package + config + vim plugins)
+- ✅ Tmux removed (package, config, vim plugins)
 - ⬜ devctx opens bare kitty windows (no zellij sessions)
 - ⬜ No jj workspace integration
 

@@ -18,8 +18,11 @@ pane_frames false
 // Scrollback
 scroll_buffer_size 10000
 
-// No mouse (matching tmux config)
+// No mouse
 mouse_mode false
+
+// Use nvim for scrollback editing (Ctrl+b [)
+scrollback_editor "nvim"
 
 // Copy on select (like vim visual mode)
 copy_on_select true
@@ -105,8 +108,9 @@ keybinds clear-defaults=true {
         bind "8" { GoToTab 8; SwitchToMode "normal"; }
         bind "9" { GoToTab 9; SwitchToMode "normal"; }
 
-        // Scroll mode
+        // Scrollback: [ for built-in scroll mode, ] for nvim editor
         bind "[" { SwitchToMode "scroll"; }
+        bind "]" { EditScrollback; SwitchToMode "normal"; }
 
         // Detach
         bind "d" { Detach; }
@@ -130,7 +134,7 @@ keybinds clear-defaults=true {
         bind "Enter" { SwitchToMode "normal"; }
     }
 
-    // Scroll mode: vi-like navigation
+    // Scroll mode: vi-like navigation (Ctrl+b [)
     scroll {
         bind "Esc" { SwitchToMode "normal"; }
         bind "j" { ScrollDown; }
@@ -140,17 +144,14 @@ keybinds clear-defaults=true {
         bind "Ctrl f" { PageScrollDown; }
         bind "Ctrl b" { PageScrollUp; }
         bind "G" { ScrollToBottom; SwitchToMode "normal"; }
-        // Search
         bind "s" { SwitchToMode "entersearch"; SearchInput 0; }
     }
 
-    // Search entry mode (type query, Enter to search)
     entersearch {
         bind "Esc" { SwitchToMode "scroll"; }
         bind "Enter" { SwitchToMode "search"; }
     }
 
-    // Search results navigation
     search {
         bind "Esc" { SwitchToMode "scroll"; }
         bind "n" { Search "down"; }
