@@ -16,6 +16,7 @@ sudo nixos-rebuild switch --flake .#wiremind  # Manual flake rebuild
 screenz                             # Configure monitors
 startdm                             # Start X11/i3 (required - autorun disabled)
 switchkb                            # Toggle US/FR keyboard
+nixinit python                      # Scaffold .envrc + shell.nix for a project
 ```
 
 ---
@@ -183,7 +184,7 @@ dotfiles/
         ├── screenz            # Monitor configuration
         ├── startdm            # Start display manager
         ├── switchkb           # Keyboard layout toggle
-        └── setexclude         # Git exclude setup
+        └── nixinit             # Project scaffolding (envrc + shell.nix + git excludes)
 ```
 
 ---

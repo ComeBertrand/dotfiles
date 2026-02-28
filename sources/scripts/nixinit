@@ -1,0 +1,205 @@
+#!/usr/bin/env bash
+# nixinit - scaffold .envrc and shell.nix for a project, configure git excludes
+#
+# Usage: nixinit <language>... [--source <path>]
+#   Languages: python, rust, node
+#
+# Examples:
+#   nixinit python
+#   nixinit python rust
+#   nixinit python --source ~/workdotfiles/projects
+
+set -euo pipefail
+
+VALID_KEYWORDS=("python" "rust" "node")
+EXCLUDES=("shell.nix" ".envrc" ".jj/")
+
+usage() {
+    echo "Usage: nixinit <language>... [--source <path>]"
+    echo "Languages: ${VALID_KEYWORDS[*]}"
+    exit 1
+}
+
+# Parse arguments
+keywords=()
+source_path=""
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --source)
+            if [[ -z "${2:-}" ]]; then
+                echo "nixinit: error: --source requires a path argument" >&2
+                exit 1
+            fi
+            source_path="$2"
+            shift 2
+            ;;
+        -*)
+            echo "nixinit: error: unknown flag '$1'" >&2
+            usage
+            ;;
+        *)
+            keywords+=("$1")
+            shift
+            ;;
+    esac
+done
+
+if [[ ${#keywords[@]} -eq 0 ]]; then
+    echo "nixinit: error: no language specified" >&2
+    usage
+fi
+
+# Validate keywords
+for kw in "${keywords[@]}"; do
+    valid=false
+    for v in "${VALID_KEYWORDS[@]}"; do
+        if [[ "$kw" == "$v" ]]; then
+            valid=true
+            break
+        fi
+    done
+    if ! $valid; then
+        echo "nixinit: error: unknown language '$kw'" >&2
+        echo "Valid options: ${VALID_KEYWORDS[*]}" >&2
+        exit 1
+    fi
+done
+
+project=$(basename "$PWD")
+echo "nixinit: setting up '$project' [${keywords[*]}]"
+
+# Check which languages are requested
+has_python=false
+has_rust=false
+has_node=false
+for kw in "${keywords[@]}"; do
+    case "$kw" in
+        python) has_python=true ;;
+        rust)   has_rust=true ;;
+        node)   has_node=true ;;
+    esac
+done
+
+# --- Generate .envrc content ---
+envrc_content="use nix"
+if $has_python; then
+    envrc_content+=$'\n'"start-venv"
+    envrc_content+=$'\n'"if [[ -f uv.lock ]]; then"
+    envrc_content+=$'\n'"  watch_file uv.lock"
+    envrc_content+=$'\n'"  uv sync"
+    envrc_content+=$'\n'"fi"
+fi
+
+# --- Generate shell.nix content ---
+needs_unstable=$has_rust
+
+packages=()
+if $has_python; then
+    packages+=("    pkgs.python313")
+    packages+=("    pkgs.python313Packages.pip")
+    packages+=("    pkgs.uv")
+    packages+=("    pkgs.nodejs  # for pyright")
+fi
+if $has_rust; then
+    packages+=("    unstable.cargo")
+    packages+=("    unstable.rustc")
+    packages+=("    unstable.rustfmt")
+    packages+=("    unstable.clippy")
+    packages+=("    unstable.cargo-audit")
+fi
+if $has_node && ! $has_python; then
+    packages+=("    pkgs.nodejs")
+fi
+packages+=("    pkgs.pkg-config")
+
+# Join packages with newlines
+packages_str=""
+for pkg in "${packages[@]}"; do
+    packages_str+="${pkg}"$'\n'
+done
+# Remove trailing newline
+packages_str="${packages_str%$'\n'}"
+
+if $needs_unstable; then
+    shellnix_content="{ pkgs ? import <nixpkgs> {} }:
+
+let
+  unstable = import <nixos-unstable> {};
+  libraries = [
+    pkgs.stdenv.cc.cc.lib
+  ];
+  libraryPath = pkgs.lib.makeLibraryPath libraries;
+in
+pkgs.mkShell {
+  name = \"${project}\";
+  packages = [
+${packages_str}
+  ];
+  shellHook = ''
+    export LD_LIBRARY_PATH=\"\${libraryPath}:\$LD_LIBRARY_PATH\"
+  '';
+}"
+else
+    shellnix_content="{ pkgs ? import <nixpkgs> {} }:
+
+let
+  libraries = [
+    pkgs.stdenv.cc.cc.lib
+  ];
+  libraryPath = pkgs.lib.makeLibraryPath libraries;
+in
+pkgs.mkShell {
+  name = \"${project}\";
+  packages = [
+${packages_str}
+  ];
+  shellHook = ''
+    export LD_LIBRARY_PATH=\"\${libraryPath}:\$LD_LIBRARY_PATH\"
+  '';
+}"
+fi
+
+# --- Write or symlink files ---
+write_file() {
+    local target="$1"
+    local content="$2"
+    local label="$3"
+
+    if [[ -n "$source_path" ]]; then
+        local source_file="${source_path}/${project}-${label}"
+        mkdir -p "$source_path"
+        if [[ -e "$target" ]]; then
+            echo "skipped: $target (already exists)"
+        else
+            echo "$content" > "$source_file"
+            ln -s "$source_file" "$target"
+            echo "created: $target -> $source_file"
+        fi
+    else
+        if [[ -e "$target" ]]; then
+            echo "skipped: $target (already exists)"
+        else
+            echo "$content" > "$target"
+            echo "created: $target"
+        fi
+    fi
+}
+
+write_file ".envrc" "$envrc_content" "envrc.sh"
+write_file "shell.nix" "$shellnix_content" "shell.nix"
+
+# --- Git excludes (idempotent) ---
+if git rev-parse --git-common-dir &>/dev/null; then
+    exclude_path="$(git rev-parse --git-common-dir)/info/exclude"
+    mkdir -p "$(dirname "$exclude_path")"
+    for pattern in "${EXCLUDES[@]}"; do
+        if ! grep -qxF "$pattern" "$exclude_path" 2>/dev/null; then
+            echo "$pattern" >> "$exclude_path"
+        fi
+    done
+    echo "git excludes: configured"
+else
+    echo "warning: not a git repo, skipping git excludes"
+fi
+
+echo "nixinit: done"

@@ -130,10 +130,11 @@ export PATH="/custom/directory:$PATH"
 **Implementation:** Uses `setxkbmap` to switch layouts
 **Typical use:** Bound to i3 hotkey for quick access
 
-### setexclude
-**Purpose:** Configure `.git/info/exclude` patterns
-**Usage:** Run in new git repositories
-**Why:** Local ignores that shouldn't be in .gitignore (IDE files, local scripts)
+### nixinit
+**Purpose:** Scaffold `.envrc` and `shell.nix` for a project, configure git excludes
+**Usage:** `nixinit python`, `nixinit python rust`, `nixinit python --source ~/wmdotfiles/projects`
+**Languages:** python, rust, node
+**Behavior:** Generates nix dev shell with language-specific packages, creates `.envrc`, configures git excludes (idempotent). Skips existing files.
 
 ### k9
 **Purpose:** Wrapper for k9s (Kubernetes TUI)
