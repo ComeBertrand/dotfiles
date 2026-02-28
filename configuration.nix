@@ -260,6 +260,10 @@ in
       ".config/zellij/config.kdl" = {
         source = ./sources/zellij.kdl;
       };
+      # Zellij default layout (compact-bar with mode indicator)
+      ".config/zellij/layouts/default.kdl" = {
+        source = ./sources/zellij-layout.kdl;
+      };
       # Zellij autolock plugin (auto-lock when nvim/vim/git/fzf run)
       ".config/zellij/plugins/zellij-autolock.wasm" = {
         source = zellij-autolock;

@@ -97,6 +97,29 @@ autocmd("FileType", {
 })
 
 -- ============================================================================
+-- GENERAL: Fix display after Zellij pane resize
+-- ============================================================================
+augroup("fix_resize", { clear = true })
+
+autocmd("VimResized", {
+  group = "fix_resize",
+  pattern = "*",
+  callback = function()
+    local win = vim.api.nvim_get_current_win()
+    local h = vim.api.nvim_win_get_height(win)
+    vim.api.nvim_win_set_height(win, h - 1)
+    vim.api.nvim_win_set_height(win, h)
+    local ls = vim.o.laststatus
+    vim.o.laststatus = 0
+    vim.schedule(function()
+      vim.o.laststatus = ls
+      require("lualine").refresh()
+      vim.cmd("redraw!")
+    end)
+  end,
+})
+
+-- ============================================================================
 -- GENERAL: Auto-reload files changed outside Neovim
 -- ============================================================================
 augroup("auto_reload", { clear = true })

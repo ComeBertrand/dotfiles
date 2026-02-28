@@ -1,0 +1,7 @@
+// Default Zellij layout with status-bar (mode indicator + keybinding hints)
+layout {
+    pane
+    pane size=2 borderless=true {
+        plugin location="zellij:status-bar"
+    }
+}

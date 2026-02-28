@@ -26,6 +26,7 @@ map("n", "<leader>we", "<C-w>=", opts)           -- Equalize sizes
 map("n", "<leader>wl", "20<C-w><", opts)         -- Decrease width
 map("n", "<leader>wr", "20<C-w>>", opts)         -- Increase width
 
+
 -- ============================================================================
 -- WINDOW RESIZING (Terminal Mode)
 -- ============================================================================
