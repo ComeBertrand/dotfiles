@@ -97,6 +97,24 @@ autocmd("FileType", {
 })
 
 -- ============================================================================
+-- GENERAL: Fix display after Zellij pane resize
+-- ============================================================================
+augroup("fix_resize", { clear = true })
+
+autocmd("VimResized", {
+  group = "fix_resize",
+  pattern = "*",
+  callback = function()
+    vim.cmd("wincmd =")
+    vim.defer_fn(function()
+      vim.cmd("mode")
+      require("lualine").refresh()
+      vim.cmd("redraw!")
+    end, 50)
+  end,
+})
+
+-- ============================================================================
 -- GENERAL: Auto-reload files changed outside Neovim
 -- ============================================================================
 augroup("auto_reload", { clear = true })
@@ -144,7 +162,7 @@ autocmd("BufReadPost", {
 })
 
 -- ============================================================================
--- TERMINAL: Auto-enter insert mode
+-- TERMINAL: Preserve insert/normal mode across buffer switches
 -- ============================================================================
 augroup("terminal_settings", { clear = true })
 
@@ -154,24 +172,66 @@ autocmd("TermOpen", {
   callback = function()
     vim.opt_local.number = false
     vim.opt_local.relativenumber = false
+    vim.opt_local.buflisted = false
+    vim.b.terminal_insert = true
     vim.cmd("startinsert")
   end,
 })
 
--- ============================================================================
--- YAZI: Avoid terminal jk delay inside yazi
--- ============================================================================
-augroup("yazi_settings", { clear = true })
-
-autocmd("FileType", {
-  group = "yazi_settings",
-  pattern = "yazi",
-  callback = function()
-    -- Prevent waiting for "jk" mapping; keep j responsive in yazi.
-    vim.keymap.set("t", "j", "j", { buffer = true, nowait = true, silent = true })
+-- Auto-close terminal buffer when process exits
+autocmd("TermClose", {
+  group = "terminal_settings",
+  pattern = "*",
+  callback = function(ev)
+    vim.schedule(function()
+      if vim.api.nvim_buf_is_valid(ev.buf) then
+        vim.api.nvim_buf_delete(ev.buf, { force = true })
+      end
+    end)
   end,
 })
 
+-- Track when user manually re-enters terminal mode (i/a/etc)
+autocmd("TermEnter", {
+  group = "terminal_settings",
+  pattern = "*",
+  callback = function()
+    vim.b.terminal_insert = true
+  end,
+})
+
+-- Restore terminal mode when switching back to a terminal window
+autocmd({ "BufEnter", "WinEnter" }, {
+  group = "terminal_settings",
+  pattern = "term://*",
+  callback = function()
+    if vim.b.terminal_insert then
+      vim.schedule(function()
+        if vim.bo.buftype == "terminal" and vim.b.terminal_insert then
+          vim.cmd("startinsert")
+        end
+      end)
+    end
+  end,
+})
+
+
+-- ============================================================================
+-- ZELLIJ: Unlock on exit
+-- ============================================================================
+-- When exiting Neovim inside Zellij, switch back to normal mode so autolock
+-- doesn't leave Zellij stuck in locked mode.
+augroup("zellij_unlock", { clear = true })
+
+autocmd("VimLeave", {
+  group = "zellij_unlock",
+  pattern = "*",
+  callback = function()
+    if vim.env.ZELLIJ then
+      vim.fn.system("zellij action switch-mode normal")
+    end
+  end,
+})
 
 -- ============================================================================
 -- EXTRA VIM: Load additional config from $EXTRA_VIM

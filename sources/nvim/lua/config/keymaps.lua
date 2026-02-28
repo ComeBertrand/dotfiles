@@ -8,21 +8,14 @@ local map = vim.keymap.set
 local opts = { noremap = true, silent = true }
 
 -- ============================================================================
--- WINDOW NAVIGATION (Normal Mode)
--- ============================================================================
--- Move between splits with Ctrl + direction
-map("n", "<C-h>", "<C-w><C-h>", opts)
-map("n", "<C-j>", "<C-w><C-j>", opts)
-map("n", "<C-k>", "<C-w><C-k>", opts)
-map("n", "<C-l>", "<C-w><C-l>", opts)
-
--- ============================================================================
 -- WINDOW NAVIGATION (Terminal Mode)
 -- ============================================================================
-map("t", "<C-h>", "<C-\\><C-n>:TmuxNavigateLeft<CR>", opts)
-map("t", "<C-j>", "<C-\\><C-n>:TmuxNavigateDown<CR>", opts)
-map("t", "<C-k>", "<C-\\><C-n>:TmuxNavigateUp<CR>", opts)
-map("t", "<C-l>", "<C-\\><C-n>:TmuxNavigateRight<CR>", opts)
+-- Normal mode Ctrl+h/j/k/l handled by zellij-nav.nvim (see plugins/init.lua)
+-- Mark terminal as "was in insert" before navigating away
+map("t", "<C-h>", function() vim.b.terminal_insert = true; vim.cmd("stopinsert"); vim.cmd("ZellijNavigateLeft") end, opts)
+map("t", "<C-j>", function() vim.b.terminal_insert = true; vim.cmd("stopinsert"); vim.cmd("ZellijNavigateDown") end, opts)
+map("t", "<C-k>", function() vim.b.terminal_insert = true; vim.cmd("stopinsert"); vim.cmd("ZellijNavigateUp") end, opts)
+map("t", "<C-l>", function() vim.b.terminal_insert = true; vim.cmd("stopinsert"); vim.cmd("ZellijNavigateRight") end, opts)
 
 -- ============================================================================
 -- WINDOW RESIZING (Normal Mode)
@@ -32,6 +25,7 @@ map("n", "<leader>wv", "<C-w>|", opts)           -- Maximize width
 map("n", "<leader>we", "<C-w>=", opts)           -- Equalize sizes
 map("n", "<leader>wl", "20<C-w><", opts)         -- Decrease width
 map("n", "<leader>wr", "20<C-w>>", opts)         -- Increase width
+
 
 -- ============================================================================
 -- WINDOW RESIZING (Terminal Mode)
@@ -47,8 +41,23 @@ map("t", "<leader>wr", "<C-\\><C-n>20<C-w>>", opts)
 -- ============================================================================
 map("n", "<leader>th", ":split | terminal<CR>", opts)   -- Horizontal terminal
 map("n", "<leader>tv", ":vsplit | terminal<CR>", opts)  -- Vertical terminal
-map("t", "jk", "<C-\\><C-n>", opts)                     -- Exit terminal mode
+map("t", "<C-[>", function() vim.b.terminal_insert = false; vim.cmd("stopinsert") end, opts) -- Exit terminal mode
 map("t", "<C-v>", '<C-\\><C-n>"+pi', opts)              -- Paste in terminal
+
+-- ============================================================================
+-- ZELLIJ INTEGRATION
+-- ============================================================================
+-- \z - Toggle fullscreen for current zellij pane (works from nvim without
+--      leaving locked mode). Uses defer_fn to let zellij finish resizing
+--      before forcing a full terminal redraw.
+map("n", "<leader>z", function()
+  vim.fn.system("zellij action toggle-fullscreen")
+  vim.defer_fn(function()
+    vim.cmd("wincmd =")
+    vim.cmd("mode")
+    vim.cmd("redraw!")
+  end, 50)
+end, opts)
 
 -- ============================================================================
 -- SEARCH
@@ -68,6 +77,7 @@ map("n", "S", 'diw"0P', opts)
 -- NAVIGATION (defined here)
 --   Ctrl+H/J/K/L    Move between splits
 --   \wh/wv/we       Window sizing
+--   \z              Toggle zellij fullscreen
 --   \th/\tv         Open terminal
 --   jk              Exit terminal mode
 --

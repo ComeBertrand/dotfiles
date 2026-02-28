@@ -1,9 +1,15 @@
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
-# and in the NixOS manual (accessible by running ‘nixos-help’).
+# and in the NixOS manual (accessible by running 'nixos-help').
 
-{ config, pkgs, pkgs-unstable, ... }:
+{ config, pkgs, pkgs-unstable, llmPkgs, ... }:
 
+let
+  zellij-autolock = pkgs.fetchurl {
+    url = "https://github.com/fresh2dev/zellij-autolock/releases/download/0.2.2/zellij-autolock.wasm";
+    sha256 = "194fgd421w2j77jbpnq994y2ma03qzdlz932cxfhfznrpw3mdjb9";
+  };
+in
 {
   imports =
     [ # Include the results of the hardware scan.
@@ -138,7 +144,7 @@
   # Enable docker
   virtualisation.docker.enable = true;
 
-  # Define a user account. Don't forget to set a password with ‘passwd’.
+  # Define a user account. Don't forget to set a password with 'passwd'.
   users.users.cbertrand = {
     isNormalUser = true;
     description = "cbertrand";
@@ -146,7 +152,7 @@
     packages = with pkgs; [
       firefox  # browser
       git  # source control
-      tmux  # terminal multiplexer
+      zellij  # terminal multiplexer
       ranger  # file manager
       docker-compose  # enable composing of containers
       slack  # communication platform
@@ -181,6 +187,7 @@
       infisical  # Secret management
       glab  # Gitlab CLI
       jq  # json reading for shell scripts
+      libnotify  # Desktop notifications (notify-send) for hooks
     ];
   };
 
@@ -206,10 +213,6 @@
       # Custom gpg-agent conf
       ".gnupg/gpg-agent.conf" = {
         source = ./sources/gpg-agent.conf;
-      };
-      # X configs (colors + URxvt conf)
-      ".Xresources" = {
-        source = ./sources/xresources;
       };
       # Scripts to make available
       ".local/bin" = {
@@ -248,13 +251,33 @@
       ".aliases" = {
         source = ./sources/aliases.sh;
       };
-      # Tmux conf
-      ".tmux.conf" = {
-        source = ./sources/tmux.conf;
+      # Zellij config
+      ".config/zellij/config.kdl" = {
+        source = ./sources/zellij.kdl;
       };
-      # URxvt conf
-      ".urxvt/ext/resize-font" = {
-        source = ./sources/rxvt-resize-font;
+      # Zellij default layout (compact-bar with mode indicator)
+      ".config/zellij/layouts/default.kdl" = {
+        source = ./sources/zellij-layout.kdl;
+      };
+      # Zellij dev layout (nvim + two terminals)
+      ".config/zellij/layouts/dev.kdl" = {
+        source = ./sources/zellij-layout-dev.kdl;
+      };
+      # Zellij autolock plugin (auto-lock when nvim/vim/git/fzf run)
+      ".config/zellij/plugins/zellij-autolock.wasm" = {
+        source = zellij-autolock;
+      };
+      # Kitty terminal config
+      ".config/kitty/kitty.conf" = {
+        source = ./sources/kitty.conf;
+      };
+      # Rofi launcher config
+      ".config/rofi/config.rasi" = {
+        source = ./sources/rofi-config.rasi;
+      };
+      # Claude Code user settings (hooks, preferences)
+      ".claude/settings.json" = {
+        source = ./sources/claude-settings.json;
       };
     };
   };
@@ -281,15 +304,14 @@
     fd  # Fast file finder for telescope.nvim
     pkgs-unstable.yazi  # Terminal file manager for yazi.nvim
     wget
-    rxvt-unicode-unwrapped  # Terminal
+    kitty  # GPU-accelerated terminal
+    jujutsu  # Git-compatible VCS frontend
+    rofi  # Application launcher (dmenu replacement)
     system-config-printer
-    (writeShellScriptBin "claude" ''
-      exec ${nodejs_22}/bin/npx -y @anthropic-ai/claude-code "$@"
-    '')
-    pkgs-unstable.gemini-cli
-    (writeShellScriptBin "codex" ''
-      exec ${nodejs_22}/bin/npx -y @openai/codex "$@"
-    '')
+    # LLM coding agents (from numtide/llm-agents.nix, auto-updated daily)
+    llmPkgs.claude-code
+    llmPkgs.gemini-cli
+    llmPkgs.codex
     dmidecode
     gcc
     gnumake
@@ -330,6 +352,15 @@
     ];
   };
 
+  # Numtide binary cache for llm-agents (pre-built packages)
+  nix.settings = {
+    experimental-features = [ "nix-command" "flakes" ];
+    extra-substituters = [ "https://cache.numtide.com" ];
+    extra-trusted-public-keys = [
+      "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
+    ];
+  };
+
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
@@ -351,13 +382,10 @@
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
-  # on your system were taken. It‘s perfectly fine and recommended to leave
+  # on your system were taken. It's perfectly fine and recommended to leave
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "23.05"; # Did you read the comment?
-
-  # Enable Nix Flakes
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
 }

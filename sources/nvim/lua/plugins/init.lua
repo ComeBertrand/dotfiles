@@ -14,7 +14,7 @@ return {
     config = function()
       require("gruvbox").setup({
         contrast = "hard",
-        transparent_mode = false,
+        transparent_mode = vim.env.ZELLIJ ~= nil,
       })
       vim.cmd("colorscheme gruvbox")
       vim.o.background = "dark"
@@ -88,6 +88,13 @@ return {
 
       telescope.setup({
         defaults = {
+          layout_strategy = "vertical",
+          layout_config = {
+            vertical = {
+              preview_cutoff = 0,
+              preview_height = 0.5,
+            },
+          },
           mappings = {
             i = {
               ["<C-j>"] = "move_selection_next",
@@ -96,6 +103,10 @@ return {
           },
         },
         pickers = {
+          buffers = {
+            sort_mru = true,
+            ignore_current_buffer = true,
+          },
           find_files = {
             hidden = true,
           },
@@ -162,25 +173,19 @@ return {
   },
 
   -- ==========================================================================
-  -- NAVIGATION: Tmux Integration (same as Vim)
+  -- NAVIGATION: Zellij Integration (replaces vim-tmux-navigator)
   -- ==========================================================================
   {
-    "christoomey/vim-tmux-navigator",
-    init = function()
-      vim.g.tmux_navigator_no_mappings = 1
-    end,
-    cmd = {
-      "TmuxNavigateLeft",
-      "TmuxNavigateDown",
-      "TmuxNavigateUp",
-      "TmuxNavigateRight",
-    },
+    "swaits/zellij-nav.nvim",
+    lazy = true,
+    event = "VeryLazy",
     keys = {
-      { "<C-h>", "<cmd>TmuxNavigateLeft<CR>" },
-      { "<C-j>", "<cmd>TmuxNavigateDown<CR>" },
-      { "<C-k>", "<cmd>TmuxNavigateUp<CR>" },
-      { "<C-l>", "<cmd>TmuxNavigateRight<CR>" },
+      { "<C-h>", "<cmd>ZellijNavigateLeft<CR>", { silent = true, desc = "Navigate left" } },
+      { "<C-j>", "<cmd>ZellijNavigateDown<CR>", { silent = true, desc = "Navigate down" } },
+      { "<C-k>", "<cmd>ZellijNavigateUp<CR>", { silent = true, desc = "Navigate up" } },
+      { "<C-l>", "<cmd>ZellijNavigateRight<CR>", { silent = true, desc = "Navigate right" } },
     },
+    opts = {},
   },
 
   -- ==========================================================================

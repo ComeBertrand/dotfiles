@@ -205,8 +205,6 @@ Plug 'junegunn/rainbow_parentheses.vim' " Color-coded matching brackets
 " --------------------------------------------------------------------------
 " Navigation and File Management
 " --------------------------------------------------------------------------
-Plug 'christoomey/vim-tmux-navigator'   " Seamless nav between Vim/tmux splits
-Plug 'benmills/vimux'                   " Run commands in tmux pane from Vim
 Plug 'francoiscabrol/ranger.vim'        " Use Ranger file manager in Vim
 Plug 'majutsushi/tagbar'                " Code structure sidebar (functions, classes)
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all'}
@@ -425,7 +423,7 @@ let mapleader="\\"
 " Window Navigation (Normal Mode)
 " --------------------------------------------------------------------------
 " Move between splits with Ctrl + direction
-" Also works seamlessly with tmux panes!
+" Also works seamlessly with zellij panes (via zellij-autolock)
 nnoremap <C-J> <C-W><C-J>
 nnoremap <C-K> <C-W><C-K>
 nnoremap <C-L> <C-W><C-L>
@@ -439,6 +437,12 @@ tnoremap <C-J> <C-W><C-J>
 tnoremap <C-K> <C-W><C-K>
 tnoremap <C-L> <C-W><C-L>
 tnoremap <C-H> <C-W><C-H>
+" Also map raw kitty keyboard protocol (CSI u) sequences so navigation
+" works after apps like Claude Code enable the protocol
+tnoremap <Esc>[104;5u <C-W><C-H>
+tnoremap <Esc>[106;5u <C-W><C-J>
+tnoremap <Esc>[107;5u <C-W><C-K>
+tnoremap <Esc>[108;5u <C-W><C-L>
 
 " --------------------------------------------------------------------------
 " Window Resizing (Normal Mode)
@@ -637,7 +641,7 @@ endif
 " ============================================================================
 "
 " NAVIGATION
-"   Ctrl+H/J/K/L    Move between splits (also works with tmux)
+"   Ctrl+H/J/K/L    Move between splits (also works with zellij)
 "   \f              FZF file search (git files)
 "   ;               FZF buffer search
 "   \n              Open Ranger file explorer
