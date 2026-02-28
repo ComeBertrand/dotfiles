@@ -57,14 +57,14 @@ keybinds clear-defaults=true {
         bind "Enter" { WriteChars "\u{000D}"; MessagePlugin "autolock" {}; }
 
         // Re-enable autolock (counterpart to Ctrl+g in locked mode)
-        bind "Ctrl g" { MessagePlugin "autolock" {payload "enable";}; }
+        bind "Alt g" { MessagePlugin "autolock" {payload "enable";}; }
     }
 
     // Locked mode: everything passes to the running app (nvim, vim, git, fzf)
     // Ctrl+g disables autolock and escapes to normal (so autolock won't re-lock)
     // Press Ctrl+g again in normal mode to re-enable autolock
     locked {
-        bind "Ctrl g" { MessagePlugin "autolock" {payload "disable";}; SwitchToMode "normal"; }
+        bind "Alt g" { MessagePlugin "autolock" {payload "disable";}; SwitchToMode "normal"; }
     }
 
     // Tmux mode: Ctrl+b prefix, then action
@@ -161,4 +161,4 @@ keybinds clear-defaults=true {
 }
 
 // Gruvbox Dark Hard theme
-theme "gruvbox-dark"
+theme "kanagawa"
