@@ -264,6 +264,10 @@ in
       ".config/zellij/layouts/default.kdl" = {
         source = ./sources/zellij-layout.kdl;
       };
+      # Zellij dev layout (nvim + two terminals)
+      ".config/zellij/layouts/dev.kdl" = {
+        source = ./sources/zellij-layout-dev.kdl;
+      };
       # Zellij autolock plugin (auto-lock when nvim/vim/git/fzf run)
       ".config/zellij/plugins/zellij-autolock.wasm" = {
         source = zellij-autolock;
