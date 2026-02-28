@@ -483,96 +483,45 @@ devctx
 
 ---
 
-## Phase 5: Zellij (low priority, when ready)
+## Phase 5: Finish Zellij migration + jj workspaces
 
-**Estimated time:** 3+ hours
-**Depends on:** Phase 1 (kitty must be stable)
-**Files touched:** `configuration.nix`, `sources/tmux.conf` (removed), new `sources/zellij/config.kdl`, vim config, neovim config
+**Estimated time:** 2–3 hours
+**Files touched:** `configuration.nix`, `sources/tmux.conf` (removed), `sources/vimrc`, `sources/scripts/devctx`, new `sources/scripts/devwork`
 
-This is outlined at a higher level since it's not immediate. Do this after
-Phases 1–3 are stable and you've been using kitty for a while.
+### Current state
 
-### Step 1: Install zellij, keep tmux temporarily
+Most of Phase 5 is already done:
+- ✅ Zellij installed and configured (`sources/zellij.kdl`, layouts, autolock)
+- ✅ Neovim migrated to `zellij-nav.nvim` (Ctrl+h/j/k/l works across panes)
+- ✅ Jujutsu installed (replaces git-prole worktrees)
+- ⬜ Tmux still installed alongside (package + config + vim plugins)
+- ⬜ devctx opens bare kitty windows (no zellij sessions)
+- ⬜ No jj workspace integration
+
+### Step 1: Remove tmux from Vim
+
+In `sources/vimrc`, remove the tmux-specific plugins:
+
+```vim
+" REMOVE these two plugins (Section 9: Plugin Manager)
+Plug 'christoomey/vim-tmux-navigator'   " Seamless nav between Vim/tmux splits
+Plug 'benmills/vimux'                   " Run commands in tmux pane from Vim
+```
+
+Keep the basic `Ctrl+h/j/k/l` window navigation mappings — they still work for
+vim splits within a single vim instance. The zellij-autolock plugin handles the
+zellij↔vim boundary (locks zellij when vim is focused, so Ctrl+h/j/k/l goes
+to vim; unlocks when vim exits, so Ctrl+h/j/k/l goes to zellij).
+
+Also remove any tmux-related comments (lines 428, 646 area).
+
+### Step 2: Remove tmux package and config
 
 In `configuration.nix`:
 
 ```nix
-# ADD (keep tmux alongside for transition)
-zellij  # Terminal multiplexer (tmux replacement)
-```
-
-### Step 2: Create zellij config
-
-Create `sources/zellij/config.kdl`. Zellij uses KDL format.
-
-Key decisions for the config:
-
-**Keybinding mode:** Zellij uses a different paradigm than tmux. Instead of a prefix
-key (`Ctrl+b`), it has modal keybindings (Normal, Locked, Pane, Tab, etc.).
-The most tmux-like experience uses `Ctrl+a` or `Ctrl+b` as the switch-mode key:
-
-```kdl
-// sources/zellij/config.kdl
-keybinds {
-    // Use Ctrl+b as the "prefix" equivalent (switch to pane mode)
-    normal {
-        bind "Ctrl b" { SwitchToMode "pane"; }
-    }
-    pane {
-        bind "h" { MoveFocus "left"; SwitchToMode "normal"; }
-        bind "j" { MoveFocus "down"; SwitchToMode "normal"; }
-        bind "k" { MoveFocus "up"; SwitchToMode "normal"; }
-        bind "l" { MoveFocus "right"; SwitchToMode "normal"; }
-        bind "|" { NewPane "right"; SwitchToMode "normal"; }
-        bind "-" { NewPane "down"; SwitchToMode "normal"; }
-    }
-}
-
-theme "gruvbox-dark"
-
-default_shell "bash"
-pane_frames false
-```
-
-**Session persistence:** Zellij has built-in session management:
-```bash
-zellij attach my-project  # attach or create
-zellij list-sessions      # see what's running
-```
-
-### Step 3: Vim/Neovim navigator integration
-
-This is the hardest part. The `christoomey/vim-tmux-navigator` plugin only works
-with tmux. For Zellij, you need a different approach.
-
-**Option A: Use Zellij's built-in vim-aware navigation** (experimental, check
-if available in your Zellij version). Zellij has been working on `move-focus-or-tab`
-actions that can detect vim.
-
-**Option B: Use a Zellij plugin.** Search for `zellij-nav.wasm` or similar
-community plugins that replicate the vim-tmux-navigator behavior.
-
-**Option C: Keep Ctrl+h/j/k/l for vim splits only**, use Zellij's own keybindings
-(modal, e.g. `Ctrl+b` then `h/j/k/l`) for pane navigation. This avoids conflicts
-entirely but means different muscle memory for vim splits vs zellij panes.
-
-In vim (`sources/vimrc`):
-- Remove `christoomey/vim-tmux-navigator` plugin
-- Remove the `is_vim` tmux detection block
-- Keep the basic `Ctrl+h/j/k/l` window navigation mappings (they work for vim splits)
-
-In neovim (`sources/nvim/lua/plugins/init.lua`):
-- Remove the `christoomey/vim-tmux-navigator` plugin entry
-- Replace with Zellij-compatible navigator if Option B is chosen
-- Or keep basic split navigation and use modal Zellij keybindings
-
-### Step 4: Remove tmux config
-
-Once confident Zellij works:
-
-```nix
 # REMOVE from user packages
-tmux
+tmux  # terminal multiplexer
 
 # REMOVE from home.file
 ".tmux.conf" = {
@@ -582,31 +531,174 @@ tmux
 
 Delete `sources/tmux.conf` from the repo.
 
-### Step 5: Update devctx (Phase 3) to use Zellij sessions
+### Step 3: Update devctx to use Zellij sessions
 
-If Phase 3 is already done, update `devctx` to optionally attach/create a
-Zellij session:
+Replace the bare `kitty` launch with `zellij attach --create` so each project
+gets a persistent, named session. Session name = directory basename.
 
 ```bash
-# Instead of just opening kitty:
+# REPLACE the kitty launch line in sources/scripts/devctx:
+
+# Current:
+kitty --directory "$target" --title "dev: ..." &
+
+# With:
 session_name=$(basename "$target")
-kitty --directory "$target" zellij attach "$session_name" --create &
+kitty --directory "$target" --title "dev: $session_name" zellij attach "$session_name" --create &
 ```
 
-This gives you persistent, named sessions per project — the main win of Zellij
-over bare kitty windows.
+This means:
+- First open: creates a new zellij session in that directory
+- Subsequent opens: reattaches to the existing session (all panes/tabs preserved)
+- `zellij list-sessions` shows all active project sessions
 
-### The nix-direnv issue you mentioned
+### Step 4: Teach devctx to discover jj workspaces
 
-You said tmux "breaks with nix-direnv & vim." This is likely because tmux inherits
-the environment at session creation time and doesn't re-evaluate direnv when you
-`cd` into a project within an existing tmux session. Zellij has the same
-fundamental behavior — the multiplexer shell inherits the parent environment.
+Jujutsu workspaces are directories with a `.jj/` directory. When you create a
+workspace with `jj workspace add ../my-project--feature-x`, it becomes a sibling
+directory to the original repo. devctx should find these too.
 
-The fix (for any multiplexer) is ensuring direnv's bash hook runs in each new
-pane's shell. Since your `bashrc.sh` already has `eval "$(direnv hook bash)"`,
-new Zellij panes should pick up direnv correctly as long as they start a login
-shell. Test this explicitly before removing tmux.
+Update the candidate scanning in `sources/scripts/devctx`:
+
+```bash
+# REPLACE the candidate scanning loop with:
+candidates=()
+for root in "${PROJECT_DIRS[@]}"; do
+    [[ -d "$root" ]] || continue
+    for project in "$root"/*/; do
+        [[ -d "$project" ]] || continue
+        # Regular git repo or jj workspace
+        if [[ -d "${project}.git" || -d "${project}.jj" ]]; then
+            candidates+=("$project")
+        fi
+    done
+done
+```
+
+This catches:
+- Regular git repos (`.git/` directory)
+- Jujutsu-colocated repos (have both `.git/` and `.jj/`)
+- Jj workspaces created as siblings (`jj workspace add ../name`)
+
+### Step 5: Create `devwork` script
+
+New script `sources/scripts/devwork` — creates a jj workspace + zellij session
+in one shot, and cleans up when done.
+
+```bash
+#!/usr/bin/env bash
+# devwork - Create/open a jj workspace with a zellij session, or clean up
+#
+# Usage:
+#   devwork <name>          Create workspace + open zellij session
+#   devwork --done <name>   Clean up workspace + kill session
+
+set -euo pipefail
+
+usage() {
+    echo "Usage: devwork <name> | devwork --done <name>"
+    exit 1
+}
+
+[[ $# -lt 1 ]] && usage
+
+# Must be in a jj repo
+if ! jj root &>/dev/null; then
+    echo "devwork: error: not in a jj repository" >&2
+    exit 1
+fi
+
+project=$(basename "$(jj root)")
+
+if [[ "$1" == "--done" ]]; then
+    [[ -z "${2:-}" ]] && usage
+    name="$2"
+    workspace_dir="$(dirname "$(jj root)")/${project}--${name}"
+    session_name="${project}--${name}"
+
+    # Kill zellij session if running
+    if zellij list-sessions 2>/dev/null | grep -q "^${session_name}"; then
+        zellij kill-session "$session_name"
+        echo "killed session: $session_name"
+    fi
+
+    # Forget jj workspace
+    if jj workspace list | grep -q "^${name}:"; then
+        jj workspace forget "$name"
+        echo "forgot workspace: $name"
+    fi
+
+    # Remove directory
+    if [[ -d "$workspace_dir" ]]; then
+        rm -rf "$workspace_dir"
+        echo "removed: $workspace_dir"
+    fi
+
+    echo "devwork: cleaned up '$name'"
+else
+    name="$1"
+    workspace_dir="$(dirname "$(jj root)")/${project}--${name}"
+    session_name="${project}--${name}"
+
+    # Create workspace if it doesn't exist
+    if [[ ! -d "$workspace_dir" ]]; then
+        jj workspace add --name "$name" "$workspace_dir"
+        echo "created workspace: $workspace_dir"
+    else
+        echo "workspace exists: $workspace_dir"
+    fi
+
+    # Open kitty + zellij session
+    kitty --directory "$workspace_dir" --title "dev: $session_name" \
+        zellij attach "$session_name" --create &
+    disown
+
+    echo "devwork: opened '$name'"
+fi
+```
+
+**Workflow:**
+
+```bash
+cd ~/Workspace/my-project           # main repo
+devwork feature-x                    # creates ../my-project--feature-x/
+                                     # opens kitty + zellij session "my-project--feature-x"
+
+# ... work on feature, detach zellij, come back later ...
+# devctx shows both my-project and my-project--feature-x in rofi
+
+# When done:
+devwork --done feature-x             # kills session, forgets workspace, removes dir
+```
+
+**Directory convention:** `<project>--<workspace>` as siblings. The `--` separator
+avoids collisions with project names that contain hyphens. devctx finds these
+automatically since they have `.jj/` directories.
+
+**Direnv compatibility:** Each workspace is a full working copy, so `.envrc` and
+`shell.nix` from the repo are present. Direnv evaluates per-directory, so each
+workspace gets its own nix environment and venv.
+
+### Step 6: Verify & test
+
+```bash
+./recrank.sh
+
+# 1. Verify tmux removal
+which tmux  # should fail
+vim  # Ctrl+h/j/k/l should still navigate vim splits
+
+# 2. Test devctx with zellij sessions
+devctx  # pick a project, verify zellij starts
+# Ctrl+b d to detach, run devctx again — should reattach
+
+# 3. Test jj workspace flow
+cd ~/Workspace/some-jj-repo
+devwork test-feature    # creates workspace + session
+jj workspace list       # shows default + test-feature
+devctx                  # should show both in rofi
+devwork --done test-feature  # cleans up
+```
 
 ---
 
@@ -616,7 +708,7 @@ shell. Test this explicitly before removing tmux.
 Phase 0 ✅ (done — llm-agents.nix)
 Phase 4 ✅ (done — Claude Code notifications)
 Phase 1 ✅ (done — kitty terminal)
-Phase 2 ✅ (done — git-prole worktrees)
+Phase 2 ✅ (done — git-prole → replaced by jujutsu)
 Phase 3 ✅ (done — rofi + devctx)
-Phase 5    (zellij — whenever you're ready, ~3+ hrs)
+Phase 5    (finish zellij + jj workspaces — ~2-3 hrs)
 ```
