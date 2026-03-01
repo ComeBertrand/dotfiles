@@ -41,7 +41,18 @@ map("t", "<leader>wr", "<C-\\><C-n>20<C-w>>", opts)
 -- ============================================================================
 map("n", "<leader>th", ":split | terminal<CR>", opts)   -- Horizontal terminal
 map("n", "<leader>tv", ":vsplit | terminal<CR>", opts)  -- Vertical terminal
-map("t", "<C-[>", function() vim.b.terminal_insert = false; vim.cmd("stopinsert") end, opts) -- Exit terminal mode
+map("t", "<C-[>", function()
+  local win = vim.api.nvim_get_current_win()
+  local config = vim.api.nvim_win_get_config(win)
+  if config.relative ~= "" then
+    -- Floating window (yazi, etc.): close it
+    vim.api.nvim_win_close(win, true)
+  else
+    -- Regular terminal: exit insert mode
+    vim.b.terminal_insert = false
+    vim.cmd("stopinsert")
+  end
+end, opts)
 map("t", "<C-v>", '<C-\\><C-n>"+pi', opts)              -- Paste in terminal
 
 -- ============================================================================

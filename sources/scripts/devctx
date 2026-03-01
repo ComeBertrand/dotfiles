@@ -43,10 +43,16 @@ selected=$(printf '%s\n' "${display[@]}" | rofi -dmenu -p "project" -i)
 target="${selected/#\~/$HOME}"
 
 # Open kitty with zellij session (unset ZELLIJ so it doesn't attach to parent)
-# Delete dead sessions to avoid broken resurrection, then attach -c for create-or-attach
+# Delete dead sessions to avoid broken resurrection
 session_name=$(basename "$target")
 zellij delete-session "$session_name" 2>/dev/null || true
-env -u ZELLIJ kitty --directory "$target" --title "dev: $session_name" \
-    zellij attach "$session_name" -c &
+# Attach to live session, or create new one with dev layout
+if zellij list-sessions -s 2>/dev/null | grep -qx "${session_name}"; then
+    env -u ZELLIJ kitty --directory "$target" --title "dev: $session_name" \
+        zellij attach "$session_name" &
+else
+    env -u ZELLIJ kitty --directory "$target" --title "dev: $session_name" \
+        zellij -n dev -s "$session_name" &
+fi
 
 disown
