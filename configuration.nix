@@ -206,6 +206,10 @@ in
       ".config/direnv/direnvrc" = {
         source = ./sources/direnvrc.sh;
       };
+      # Direnv config (auto-allow Workspace directories)
+      ".config/direnv/direnv.toml" = {
+        source = ./sources/direnv.toml;
+      };
       # Custom nixpkgs config
       ".config/nixpkgs/config.nix" = {
         source = ./sources/config.nix;
@@ -327,7 +331,7 @@ in
     nodePackages.eslint  # JS/TS linter
   ];
 
-  environment.variables.EDITOR = "vim";
+  environment.variables.EDITOR = "nvim";
 
   # Terminal fonts, chose the one you prefer
   fonts.packages = with pkgs; [

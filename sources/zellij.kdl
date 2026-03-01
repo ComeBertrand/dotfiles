@@ -81,7 +81,6 @@ keybinds clear-defaults=true {
         bind "e" { NewPane "stacked"; SwitchToMode "normal"; }
 
         // Pane management
-        bind "x" { CloseFocus; SwitchToMode "normal"; }
         bind "z" { ToggleFocusFullscreen; SwitchToMode "normal"; }
         bind "w" { ToggleFloatingPanes; SwitchToMode "normal"; }
         bind "m" { SwitchToMode "move"; }
@@ -93,7 +92,7 @@ keybinds clear-defaults=true {
         bind "L" { Resize "Increase right"; }
 
         // Tab management (Zellij-style)
-        bind "X" { CloseTab; SwitchToMode "normal"; }
+        bind "x" { CloseTab; SwitchToMode "normal"; }
         bind "n" { NewTab; SwitchToMode "normal"; }
         bind "h" { GoToPreviousTab; SwitchToMode "normal"; }
         bind "l" { GoToNextTab; SwitchToMode "normal"; }
