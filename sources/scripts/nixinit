@@ -12,7 +12,7 @@
 set -euo pipefail
 
 VALID_KEYWORDS=("python" "rust" "node")
-EXCLUDES=("shell.nix" ".envrc" ".jj/")
+EXCLUDES=("shell.nix" ".envrc" ".jj/" ".devwork")
 
 usage() {
     echo "Usage: nixinit <language>... [--source <path>]"
@@ -187,6 +187,15 @@ write_file() {
 
 write_file ".envrc" "$envrc_content" "envrc.sh"
 write_file "shell.nix" "$shellnix_content" "shell.nix"
+
+# --- Create .devwork (files to copy to worktrees) ---
+if [[ ! -e ".devwork" ]]; then
+    printf '%s\n' "# Files to copy to new worktrees (used by devwork)" \
+        ".envrc" "shell.nix" > .devwork
+    echo "created: .devwork"
+else
+    echo "skipped: .devwork (already exists)"
+fi
 
 # --- Git excludes (idempotent) ---
 if git rev-parse --git-common-dir &>/dev/null; then

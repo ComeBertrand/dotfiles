@@ -137,21 +137,39 @@ else
         fi
 
         # Copy non-tracked dev files from main repo
-        for f in .envrc shell.nix; do
-            if [[ -e "${main_root}/${f}" ]]; then
-                cp -a "${main_root}/${f}" "${worktree_dir}/${f}"
-                echo "copied: $f"
-            fi
-        done
+        # Use .devwork file if it exists, otherwise fall back to defaults
+        if [[ -f "${main_root}/.devwork" ]]; then
+            while IFS= read -r f || [[ -n "$f" ]]; do
+                [[ -z "$f" || "$f" == \#* ]] && continue
+                if [[ -e "${main_root}/${f}" ]]; then
+                    mkdir -p "${worktree_dir}/$(dirname "$f")"
+                    cp -a "${main_root}/${f}" "${worktree_dir}/${f}"
+                    echo "copied: $f"
+                fi
+            done < "${main_root}/.devwork"
+        else
+            for f in .envrc shell.nix; do
+                if [[ -e "${main_root}/${f}" ]]; then
+                    cp -a "${main_root}/${f}" "${worktree_dir}/${f}"
+                    echo "copied: $f"
+                fi
+            done
+        fi
     else
         echo "worktree exists: $worktree_dir"
     fi
 
     # Open kitty + zellij session (unset ZELLIJ so it doesn't attach to parent)
-    # Delete dead sessions to avoid broken resurrection, then attach -c for create-or-attach
+    # Delete dead sessions to avoid broken resurrection
     zellij delete-session "$session_name" 2>/dev/null || true
-    env -u ZELLIJ kitty --directory "$worktree_dir" --title "dev: $session_name" \
-        zellij attach "$session_name" -c &
+    # Attach to live session, or create new one with dev layout
+    if zellij list-sessions -s 2>/dev/null | grep -qx "${session_name}"; then
+        env -u ZELLIJ kitty --directory "$worktree_dir" --title "dev: $session_name" \
+            zellij attach "$session_name" &
+    else
+        env -u ZELLIJ kitty --directory "$worktree_dir" --title "dev: $session_name" \
+            zellij -n dev -s "$session_name" &
+    fi
     disown
 
     echo "devwork: opened '$name'"
