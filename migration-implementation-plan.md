@@ -483,55 +483,24 @@ devctx
 
 ---
 
-## Phase 5: Finish Zellij migration + jj workspaces
+## Phase 5: Finish Zellij migration + git worktrees
 
 **Estimated time:** 2–3 hours
-**Files touched:** `configuration.nix`, `sources/tmux.conf` (removed), `sources/vimrc`, `sources/scripts/devctx`, new `sources/scripts/devwork`
+**Files touched:** `sources/scripts/devctx`, `sources/scripts/devwork` (new), `sources/direnv.toml` (new), `configuration.nix`
 
 ### Current state
 
 Most of Phase 5 is already done:
 - ✅ Zellij installed and configured (`sources/zellij.kdl`, layouts, autolock)
 - ✅ Neovim migrated to `zellij-nav.nvim` (Ctrl+h/j/k/l works across panes)
-- ✅ Jujutsu installed (replaces git-prole worktrees)
 - ✅ Tmux removed (package, config, vim plugins)
-- ⬜ devctx opens bare kitty windows (no zellij sessions)
-- ⬜ No jj workspace integration
+- ✅ Nvim fullscreen toggle (`\z`) and transparent mode fix
+- ✅ Scrollback: `Ctrl+b [` (built-in) / `Ctrl+b ]` (nvim editor)
+- ✅ devctx uses zellij sessions + discovers worktrees
+- ✅ Git worktree integration (devwork script)
+- ✅ Direnv auto-allow for Workspace
 
-### Step 1: Remove tmux from Vim
-
-In `sources/vimrc`, remove the tmux-specific plugins:
-
-```vim
-" REMOVE these two plugins (Section 9: Plugin Manager)
-Plug 'christoomey/vim-tmux-navigator'   " Seamless nav between Vim/tmux splits
-Plug 'benmills/vimux'                   " Run commands in tmux pane from Vim
-```
-
-Keep the basic `Ctrl+h/j/k/l` window navigation mappings — they still work for
-vim splits within a single vim instance. The zellij-autolock plugin handles the
-zellij↔vim boundary (locks zellij when vim is focused, so Ctrl+h/j/k/l goes
-to vim; unlocks when vim exits, so Ctrl+h/j/k/l goes to zellij).
-
-Also remove any tmux-related comments (lines 428, 646 area).
-
-### Step 2: Remove tmux package and config
-
-In `configuration.nix`:
-
-```nix
-# REMOVE from user packages
-tmux  # terminal multiplexer
-
-# REMOVE from home.file
-".tmux.conf" = {
-  source = ./sources/tmux.conf;
-};
-```
-
-Delete `sources/tmux.conf` from the repo.
-
-### Step 3: Update devctx to use Zellij sessions
+### Step 1: Update devctx to use Zellij sessions
 
 Replace the bare `kitty` launch with `zellij attach --create` so each project
 gets a persistent, named session. Session name = directory basename.
@@ -552,23 +521,47 @@ This means:
 - Subsequent opens: reattaches to the existing session (all panes/tabs preserved)
 - `zellij list-sessions` shows all active project sessions
 
-### Step 4: Teach devctx to discover jj workspaces
+### Step 2: Auto-allow direnv for Workspace
 
-Jujutsu workspaces are directories with a `.jj/` directory. When you create a
-workspace with `jj workspace add ../my-project--feature-x`, it becomes a sibling
-directory to the original repo. devctx should find these too.
+Create `sources/direnv.toml` and link it via Home Manager so direnv auto-allows
+`.envrc` files under your Workspace directory (including worktrees). No more
+manual `direnv allow` after creating a worktree.
 
-Update the candidate scanning in `sources/scripts/devctx`:
+Create `sources/direnv.toml`:
+
+```toml
+[whitelist]
+prefix = [ "/home/cbertrand/Workspace" ]
+```
+
+Add Home Manager entry in `configuration.nix`:
+
+```nix
+".config/direnv/direnv.toml" = {
+  source = ./sources/direnv.toml;
+};
+```
+
+### Step 3: Teach devctx to discover git worktrees
+
+Git worktrees are directories with a `.git` *file* (not directory) pointing back
+to the main repo. Worktrees live in `~/Workspace/worktrees/` to keep the main
+Workspace directory clean. devctx needs to scan this directory too.
+
+Update `PROJECT_DIRS` and candidate scanning in `sources/scripts/devctx`:
 
 ```bash
-# REPLACE the candidate scanning loop with:
+PROJECT_DIRS=("$HOME/Workspace" "$HOME/Documents/perso/projects" "$HOME/Workspace/worktrees")
+
+# ...
+
 candidates=()
 for root in "${PROJECT_DIRS[@]}"; do
     [[ -d "$root" ]] || continue
     for project in "$root"/*/; do
         [[ -d "$project" ]] || continue
-        # Regular git repo or jj workspace
-        if [[ -d "${project}.git" || -d "${project}.jj" ]]; then
+        # Regular git repo (.git dir) or git worktree (.git file)
+        if [[ -d "${project}.git" || -f "${project}.git" ]]; then
             candidates+=("$project")
         fi
     done
@@ -576,24 +569,30 @@ done
 ```
 
 This catches:
-- Regular git repos (`.git/` directory)
-- Jujutsu-colocated repos (have both `.git/` and `.jj/`)
-- Jj workspaces created as siblings (`jj workspace add ../name`)
+- Regular git repos (`.git/` directory) in Workspace
+- Git worktrees (`.git` file) in Workspace/worktrees
 
-### Step 5: Create `devwork` script
+### Step 4: Create `devwork` script
 
-New script `sources/scripts/devwork` — creates a jj workspace + zellij session
-in one shot, and cleans up when done.
+New script `sources/scripts/devwork` — creates a git worktree + zellij session
+in one shot, copies non-tracked dev files, and cleans up when done.
+
+Worktrees live in `~/Workspace/worktrees/<project>--<name>` to keep the main
+Workspace directory clean.
 
 ```bash
 #!/usr/bin/env bash
-# devwork - Create/open a jj workspace with a zellij session, or clean up
+# devwork - Create/open a git worktree with a zellij session, or clean up
 #
 # Usage:
-#   devwork <name>          Create workspace + open zellij session
-#   devwork --done <name>   Clean up workspace + kill session
+#   devwork <name>          Create worktree + open zellij session
+#   devwork --done <name>   Clean up worktree + kill session
+#
+# Worktrees are created in ~/Workspace/worktrees/<project>--<name>
 
 set -euo pipefail
+
+WORKTREE_ROOT="$HOME/Workspace/worktrees"
 
 usage() {
     echo "Usage: devwork <name> | devwork --done <name>"
@@ -602,18 +601,20 @@ usage() {
 
 [[ $# -lt 1 ]] && usage
 
-# Must be in a jj repo
-if ! jj root &>/dev/null; then
-    echo "devwork: error: not in a jj repository" >&2
+# Must be in a git repo
+if ! git rev-parse --git-dir &>/dev/null; then
+    echo "devwork: error: not in a git repository" >&2
     exit 1
 fi
 
-project=$(basename "$(jj root)")
+# Get the toplevel of the main repo (works from worktrees too)
+main_root=$(git rev-parse --show-toplevel)
+project=$(basename "$main_root")
 
 if [[ "$1" == "--done" ]]; then
     [[ -z "${2:-}" ]] && usage
     name="$2"
-    workspace_dir="$(dirname "$(jj root)")/${project}--${name}"
+    worktree_dir="${WORKTREE_ROOT}/${project}--${name}"
     session_name="${project}--${name}"
 
     # Kill zellij session if running
@@ -622,34 +623,46 @@ if [[ "$1" == "--done" ]]; then
         echo "killed session: $session_name"
     fi
 
-    # Forget jj workspace
-    if jj workspace list | grep -q "^${name}:"; then
-        jj workspace forget "$name"
-        echo "forgot workspace: $name"
+    # Remove git worktree (also deletes the directory)
+    if git worktree list | grep -q "$worktree_dir"; then
+        git worktree remove "$worktree_dir"
+        echo "removed worktree: $worktree_dir"
+    elif [[ -d "$worktree_dir" ]]; then
+        # Worktree already gone from git, clean up leftover dir
+        rm -rf "$worktree_dir"
+        echo "removed directory: $worktree_dir"
     fi
 
-    # Remove directory
-    if [[ -d "$workspace_dir" ]]; then
-        rm -rf "$workspace_dir"
-        echo "removed: $workspace_dir"
+    # Delete the branch if it was merged or no longer needed
+    if git branch --list "$name" | grep -q "$name"; then
+        echo "note: branch '$name' still exists (delete manually with 'git branch -d $name')"
     fi
 
     echo "devwork: cleaned up '$name'"
 else
     name="$1"
-    workspace_dir="$(dirname "$(jj root)")/${project}--${name}"
+    worktree_dir="${WORKTREE_ROOT}/${project}--${name}"
     session_name="${project}--${name}"
 
-    # Create workspace if it doesn't exist
-    if [[ ! -d "$workspace_dir" ]]; then
-        jj workspace add --name "$name" "$workspace_dir"
-        echo "created workspace: $workspace_dir"
+    # Create worktree if it doesn't exist
+    if [[ ! -d "$worktree_dir" ]]; then
+        mkdir -p "$WORKTREE_ROOT"
+        git worktree add "$worktree_dir" -b "$name"
+        echo "created worktree: $worktree_dir"
+
+        # Copy non-tracked dev files from main repo
+        for f in .envrc shell.nix; do
+            if [[ -e "${main_root}/${f}" ]]; then
+                cp -a "${main_root}/${f}" "${worktree_dir}/${f}"
+                echo "copied: $f"
+            fi
+        done
     else
-        echo "workspace exists: $workspace_dir"
+        echo "worktree exists: $worktree_dir"
     fi
 
     # Open kitty + zellij session
-    kitty --directory "$workspace_dir" --title "dev: $session_name" \
+    kitty --directory "$worktree_dir" --title "dev: $session_name" \
         zellij attach "$session_name" --create &
     disown
 
@@ -661,42 +674,60 @@ fi
 
 ```bash
 cd ~/Workspace/my-project           # main repo
-devwork feature-x                    # creates ../my-project--feature-x/
+devwork feature-x                    # creates ~/Workspace/worktrees/my-project--feature-x/
+                                     # copies .envrc + shell.nix from main repo
                                      # opens kitty + zellij session "my-project--feature-x"
+                                     # direnv auto-allows (via whitelist)
 
 # ... work on feature, detach zellij, come back later ...
-# devctx shows both my-project and my-project--feature-x in rofi
+# devctx shows both in rofi (scans Workspace/ and Workspace/worktrees/)
 
 # When done:
-devwork --done feature-x             # kills session, forgets workspace, removes dir
+devwork --done feature-x             # kills session, removes worktree
+                                     # reminds to delete branch if still around
 ```
 
-**Directory convention:** `<project>--<workspace>` as siblings. The `--` separator
-avoids collisions with project names that contain hyphens. devctx finds these
-automatically since they have `.jj/` directories.
+**Directory layout:**
 
-**Direnv compatibility:** Each workspace is a full working copy, so `.envrc` and
-`shell.nix` from the repo are present. Direnv evaluates per-directory, so each
-workspace gets its own nix environment and venv.
+```
+~/Workspace/
+├── my-project/                      # main repo
+├── other-project/                   # another repo
+└── worktrees/                       # all worktrees go here
+    ├── my-project--feature-x/       # worktree (has .git file, copied .envrc/shell.nix)
+    └── my-project--bugfix-y/        # another worktree
+```
 
-### Step 6: Verify & test
+**Non-tracked files:** `devwork` copies `.envrc` and `shell.nix` from the main
+repo into new worktrees using `cp -a` (preserves symlinks if `--source` was used
+with nixinit). These files are git-excluded so they won't be in the checkout.
+
+**Direnv:** Auto-allowed via `sources/direnv.toml` whitelist (Step 2). Each
+worktree gets its own nix environment and venv since direnv evaluates per-directory.
+
+**Git excludes:** The `nixinit` script uses `git rev-parse --git-common-dir`
+which resolves to the main repo's `.git` directory, so excludes are shared across
+all worktrees automatically.
+
+### Step 5: Verify & test
 
 ```bash
 ./recrank.sh
 
-# 1. Verify tmux removal
-which tmux  # should fail
-vim  # Ctrl+h/j/k/l should still navigate vim splits
-
-# 2. Test devctx with zellij sessions
+# 1. Test devctx with zellij sessions
 devctx  # pick a project, verify zellij starts
 # Ctrl+b d to detach, run devctx again — should reattach
 
-# 3. Test jj workspace flow
-cd ~/Workspace/some-jj-repo
-devwork test-feature    # creates workspace + session
-jj workspace list       # shows default + test-feature
-devctx                  # should show both in rofi
+# 2. Test direnv auto-allow
+cd ~/Workspace/some-repo   # should not prompt for direnv allow
+
+# 3. Test git worktree flow
+cd ~/Workspace/some-repo
+devwork test-feature       # creates worktree in ~/Workspace/worktrees/
+ls ~/Workspace/worktrees/  # should show some-repo--test-feature
+ls ~/Workspace/worktrees/some-repo--test-feature/.envrc  # should exist
+git worktree list          # shows main + test-feature
+devctx                     # should show both in rofi
 devwork --done test-feature  # cleans up
 ```
 
@@ -708,7 +739,7 @@ devwork --done test-feature  # cleans up
 Phase 0 ✅ (done — llm-agents.nix)
 Phase 4 ✅ (done — Claude Code notifications)
 Phase 1 ✅ (done — kitty terminal)
-Phase 2 ✅ (done — git-prole → replaced by jujutsu)
+Phase 2 ✅ (done — git-prole → git worktrees via devwork)
 Phase 3 ✅ (done — rofi + devctx)
-Phase 5    (finish zellij + jj workspaces — ~2-3 hrs)
+Phase 5 ✅ (done — zellij + git worktrees)
 ```

@@ -1,0 +1,158 @@
+#!/usr/bin/env bash
+# devwork - Create/open a git worktree with a zellij session, or clean up
+#
+# Usage:
+#   devwork <name> [base]   Create worktree + open zellij session
+#   devwork --done <name>   Clean up worktree + kill session
+#   devwork list            List all worktrees and their session status
+#
+# If <name> matches an existing branch, checks it out.
+# If <name> is new, creates it from [base] (default: HEAD).
+# Always runs git fetch before creating.
+#
+# Worktrees are created in ~/Workspace/worktrees/<project>--<name>
+
+set -euo pipefail
+
+WORKTREE_ROOT="$HOME/Workspace/worktrees"
+
+usage() {
+    echo "Usage: devwork <name> [base] | devwork --done <name> | devwork list"
+    exit 1
+}
+
+[[ $# -lt 1 ]] && usage
+
+# List worktrees — scoped to current repo if in one, otherwise all
+if [[ "$1" == "list" ]]; then
+    if [[ ! -d "$WORKTREE_ROOT" ]]; then
+        echo "No worktrees"
+        exit 0
+    fi
+    # Scope to current project if in a git repo
+    prefix=""
+    if git rev-parse --git-dir &>/dev/null 2>&1; then
+        prefix="$(basename "$(git rev-parse --show-toplevel)")--"
+    fi
+    found=false
+    for wt in "$WORKTREE_ROOT"/*/; do
+        [[ -d "$wt" ]] || continue
+        name=$(basename "$wt")
+        [[ -n "$prefix" && "$name" != "$prefix"* ]] && continue
+        session=""
+        if zellij list-sessions 2>/dev/null | grep -q "^${name}"; then
+            session=" (session active)"
+        fi
+        echo "$name$session"
+        found=true
+    done
+    if ! $found; then
+        echo "No worktrees${prefix:+ for ${prefix%--}}"
+    fi
+    exit 0
+fi
+
+# Must be in a git repo
+if ! git rev-parse --git-dir &>/dev/null; then
+    echo "devwork: error: not in a git repository" >&2
+    exit 1
+fi
+
+# Get the toplevel of the main repo (works from worktrees too)
+main_root=$(git rev-parse --show-toplevel)
+project=$(basename "$main_root")
+
+if [[ "$1" == "--done" ]]; then
+    [[ -z "${2:-}" ]] && usage
+    name="$2"
+    worktree_dir="${WORKTREE_ROOT}/${project}--${name}"
+    session_name="${project}--${name}"
+
+    # Kill zellij session if running
+    if zellij list-sessions 2>/dev/null | grep -q "^${session_name}"; then
+        zellij kill-session "$session_name"
+        echo "killed session: $session_name"
+    fi
+
+    # Remove git worktree (also deletes the directory)
+    if git worktree list | grep -q "$worktree_dir"; then
+        git worktree remove "$worktree_dir"
+        echo "removed worktree: $worktree_dir"
+    elif [[ -d "$worktree_dir" ]]; then
+        # Worktree already gone from git, clean up leftover dir
+        rm -rf "$worktree_dir"
+        echo "removed directory: $worktree_dir"
+    fi
+
+    # Delete the branch if it was merged or no longer needed
+    if git branch --list "$name" | grep -q "$name"; then
+        echo "note: branch '$name' still exists (delete manually with 'git branch -d $name')"
+    fi
+
+    echo "devwork: cleaned up '$name'"
+else
+    name="$1"
+    base="${2:-}"
+    worktree_dir="${WORKTREE_ROOT}/${project}--${name}"
+    session_name="${project}--${name}"
+
+    # Create worktree if it doesn't exist
+    if [[ ! -d "$worktree_dir" ]]; then
+        mkdir -p "$WORKTREE_ROOT"
+
+        echo "fetching..."
+        git fetch --quiet
+
+        # Check if branch exists locally or on a remote
+        if git show-ref --verify --quiet "refs/heads/${name}"; then
+            # Local branch exists — check it out
+            git worktree add "$worktree_dir" "$name"
+            echo "created worktree: $worktree_dir (existing branch $name)"
+        elif git show-ref --verify --quiet "refs/remotes/origin/${name}"; then
+            # Remote branch exists — track it
+            git worktree add "$worktree_dir" "$name"
+            echo "created worktree: $worktree_dir (tracking origin/$name)"
+        elif [[ -n "$base" ]]; then
+            # New branch from specified base
+            git worktree add "$worktree_dir" -b "$name" "$base"
+            echo "created worktree: $worktree_dir (new branch from $base)"
+        else
+            # New branch from main branch
+            default_branch=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||')
+            if [[ -z "$default_branch" ]]; then
+                # Fallback: check for main or master
+                for candidate in main master; do
+                    if git show-ref --verify --quiet "refs/heads/${candidate}"; then
+                        default_branch="$candidate"
+                        break
+                    fi
+                done
+            fi
+            if [[ -z "$default_branch" ]]; then
+                echo "devwork: error: could not determine default branch, specify a base explicitly" >&2
+                exit 1
+            fi
+            git worktree add "$worktree_dir" -b "$name" "$default_branch"
+            echo "created worktree: $worktree_dir (new branch from $default_branch)"
+        fi
+
+        # Copy non-tracked dev files from main repo
+        for f in .envrc shell.nix; do
+            if [[ -e "${main_root}/${f}" ]]; then
+                cp -a "${main_root}/${f}" "${worktree_dir}/${f}"
+                echo "copied: $f"
+            fi
+        done
+    else
+        echo "worktree exists: $worktree_dir"
+    fi
+
+    # Open kitty + zellij session (unset ZELLIJ so it doesn't attach to parent)
+    # Delete dead sessions to avoid broken resurrection, then attach -c for create-or-attach
+    zellij delete-session "$session_name" 2>/dev/null || true
+    env -u ZELLIJ kitty --directory "$worktree_dir" --title "dev: $session_name" \
+        zellij attach "$session_name" -c &
+    disown
+
+    echo "devwork: opened '$name'"
+fi

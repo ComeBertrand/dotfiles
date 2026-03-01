@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
-# devctx - Open a development context (project) in kitty
+# devctx - Open a development context (project) in kitty + zellij
 #
-# Scans project directories for git repos, lets you pick one via rofi,
-# and opens a kitty window in that directory.
+# Scans project directories for git repos and worktrees, lets you pick one
+# via rofi, and opens a kitty window with a zellij session in that directory.
 #
 # Usage: devctx
 # Typically bound to an i3 keybinding.
 
 set -euo pipefail
 
-PROJECT_DIRS=("$HOME/Workspace" "$HOME/Documents/perso/projects")
-# Add more project root directories above as needed
+PROJECT_DIRS=("$HOME/Workspace" "$HOME/Documents/perso/projects" "$HOME/Workspace/worktrees")
 
 # Gather all candidate directories
 candidates=()
@@ -18,7 +17,8 @@ for root in "${PROJECT_DIRS[@]}"; do
     [[ -d "$root" ]] || continue
     for project in "$root"/*/; do
         [[ -d "$project" ]] || continue
-        if [[ -d "${project}.git" ]]; then
+        # Regular git repo (.git dir) or git worktree (.git file)
+        if [[ -d "${project}.git" || -f "${project}.git" ]]; then
             candidates+=("$project")
         fi
     done
@@ -42,7 +42,11 @@ selected=$(printf '%s\n' "${display[@]}" | rofi -dmenu -p "project" -i)
 # Expand ~ back
 target="${selected/#\~/$HOME}"
 
-# Open kitty in that directory
-kitty --directory "$target" --title "dev: $(basename "$(dirname "$target")")/$(basename "$target")" &
+# Open kitty with zellij session (unset ZELLIJ so it doesn't attach to parent)
+# Delete dead sessions to avoid broken resurrection, then attach -c for create-or-attach
+session_name=$(basename "$target")
+zellij delete-session "$session_name" 2>/dev/null || true
+env -u ZELLIJ kitty --directory "$target" --title "dev: $session_name" \
+    zellij attach "$session_name" -c &
 
 disown
