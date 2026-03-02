@@ -18,19 +18,18 @@ project=$(basename "${cwd:-unknown}")
 
 case "$event" in
     Notification)
-        # Use title from Claude if provided, otherwise generic
-        notify_title="${title:-Claude Code}"
+        notify_title="Claude Code (${project})"
         notify_body="${message:-Needs your attention}"
         # Permission prompts get critical urgency (stay visible until dismissed)
         urgency="critical"
         ;;
     Stop)
-        notify_title="Claude Code"
-        notify_body="Task finished in ${project}"
+        notify_title="Claude Code (${project})"
+        notify_body="Task finished"
         urgency="normal"
         ;;
     *)
-        notify_title="Claude Code"
+        notify_title="Claude Code (${project})"
         notify_body="${message:-Event: ${event}}"
         urgency="normal"
         ;;
