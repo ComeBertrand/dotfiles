@@ -58,8 +58,8 @@ if ! git rev-parse --git-dir &>/dev/null; then
     exit 1
 fi
 
-# Get the toplevel of the main repo (works from worktrees too)
-main_root=$(git rev-parse --show-toplevel)
+# Get the toplevel of the main repo (git-common-dir resolves to main repo's .git)
+main_root=$(dirname "$(realpath "$(git rev-parse --git-common-dir)")")
 project=$(basename "$main_root")
 
 if [[ "$1" == "--done" ]]; then
@@ -165,10 +165,10 @@ else
     # Attach to live session, or create new one with dev layout
     if zellij list-sessions -s 2>/dev/null | grep -qx "${session_name}"; then
         env -u ZELLIJ kitty --directory "$worktree_dir" --title "dev: $session_name" \
-            zellij attach "$session_name" &
+            zellij attach "$session_name" 2>/dev/null &
     else
         env -u ZELLIJ kitty --directory "$worktree_dir" --title "dev: $session_name" \
-            zellij -n dev -s "$session_name" &
+            zellij -n dev -s "$session_name" 2>/dev/null &
     fi
     disown
 

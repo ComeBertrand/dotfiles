@@ -49,10 +49,10 @@ zellij delete-session "$session_name" 2>/dev/null || true
 # Attach to live session, or create new one with dev layout
 if zellij list-sessions -s 2>/dev/null | grep -qx "${session_name}"; then
     env -u ZELLIJ kitty --directory "$target" --title "dev: $session_name" \
-        zellij attach "$session_name" &
+        zellij attach "$session_name" 2>/dev/null &
 else
     env -u ZELLIJ kitty --directory "$target" --title "dev: $session_name" \
-        zellij -n dev -s "$session_name" &
+        zellij -n dev -s "$session_name" 2>/dev/null &
 fi
 
 disown
