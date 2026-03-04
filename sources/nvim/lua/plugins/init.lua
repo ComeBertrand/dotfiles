@@ -323,9 +323,9 @@ return {
         settings = {
           python = {
             analysis = {
-              autoSearchPaths = true,
+              autoSearchPaths = false,
               useLibraryCodeForTypes = true,
-              diagnosticMode = "workspace",
+              diagnosticMode = "openFilesOnly",
             },
           },
         },
