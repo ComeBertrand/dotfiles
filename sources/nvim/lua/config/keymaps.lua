@@ -76,6 +76,15 @@ end, opts)
 map("n", "<leader><space>", ":nohlsearch<CR>", opts)  -- Clear highlighting
 
 -- ============================================================================
+-- CLIPBOARD
+-- ============================================================================
+map("n", "<leader>cp", function()
+  local path = vim.fn.fnamemodify(vim.fn.expand("%"), ":.")
+  vim.fn.setreg("+", path)
+  vim.notify(path, vim.log.levels.INFO)
+end, { noremap = true, silent = true, desc = "Copy relative file path" })
+
+-- ============================================================================
 -- EDITING
 -- ============================================================================
 -- Replace word under cursor with register 0 (last yanked text)
