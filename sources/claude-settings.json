@@ -6,6 +6,7 @@
   "permissions": {
     "defaultMode": "bypassPermissions"
   },
+  "effortLevel": "high",
   "skipDangerousModePermissionPrompt": true,
   "hooks": {
     "Notification": [
