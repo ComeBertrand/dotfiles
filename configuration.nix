@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running 'nixos-help').
 
-{ config, pkgs, pkgs-unstable, llmPkgs, ... }:
+{ config, pkgs, pkgs-unstable, llmPkgs, yawnPkg, ... }:
 
 let
   zellij-autolock = pkgs.fetchurl {
@@ -188,6 +188,7 @@ in
       glab  # Gitlab CLI
       jq  # json reading for shell scripts
       libnotify  # Desktop notifications (notify-send) for hooks
+      yawnPkg  # Worktree navigator + project discovery
     ];
   };
 
@@ -278,6 +279,10 @@ in
       # Rofi launcher config
       ".config/rofi/config.rasi" = {
         source = ./sources/rofi-config.rasi;
+      };
+      # Yawn worktree navigator config
+      ".config/yawn/config.toml" = {
+        source = ./sources/yawn-config.toml;
       };
       # Claude Code user settings (hooks, preferences)
       ".claude/settings.json" = {
