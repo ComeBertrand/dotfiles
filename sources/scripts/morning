@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# morning - startup housekeeping (runs as systemd user service)
+set -euo pipefail
+
+# Purge dead zellij sessions
+zellij delete-all-sessions -y 2>/dev/null || true

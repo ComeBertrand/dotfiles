@@ -289,6 +289,15 @@ in
         source = ./sources/claude-settings.json;
       };
     };
+    # Startup housekeeping service
+    systemd.user.services.morning = {
+      Unit.Description = "Morning housekeeping";
+      Service = {
+        Type = "oneshot";
+        ExecStart = "%h/.local/bin/morning";
+      };
+      Install.WantedBy = [ "default.target" ];
+    };
   };
 
   # Allow unfree packages
