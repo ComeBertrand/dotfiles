@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# dev-open - Open a kitty + zellij session for a project directory
+# Used by yawn's open_command: dev-open <dir> <name>
+set -euo pipefail
+
+dir="$1"
+name="$2"
+
+zellij delete-session "$name" 2>/dev/null || true
+if zellij list-sessions -s 2>/dev/null | grep -qx "$name"; then
+    env -u ZELLIJ kitty --directory "$dir" --title "dev: $name" \
+        zellij attach "$name" 2>/dev/null &
+else
+    env -u ZELLIJ kitty --directory "$dir" --title "dev: $name" \
+        zellij -n dev -s "$name" 2>/dev/null &
+fi
+disown
