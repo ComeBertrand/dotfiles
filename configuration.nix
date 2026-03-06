@@ -311,6 +311,7 @@ in
     kitty  # GPU-accelerated terminal
     jujutsu  # Git-compatible VCS frontend
     rofi  # Application launcher (dmenu replacement)
+    gh  # GitHub CLI
     system-config-printer
     # LLM coding agents (from numtide/llm-agents.nix, auto-updated daily)
     llmPkgs.claude-code
