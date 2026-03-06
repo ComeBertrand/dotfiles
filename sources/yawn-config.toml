@@ -1,0 +1,9 @@
+[discovery]
+max_depth = 5
+ignore = [".*", "node_modules"]
+
+[session]
+open_command = "env -u ZELLIJ kitty --directory {dir} --title 'dev: {name}' zellij attach --create -l dev {name}"
+
+[worktree]
+root = "~/Workspace/worktrees"

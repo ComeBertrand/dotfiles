@@ -20,6 +20,9 @@
       url = "github:numtide/llm-agents.nix";
     };
 
+    # Worktree navigator + project discovery
+    yawn.url = "github:ComeBertrand/yawn";
+
     # Optional work-specific module (override with --override-input nix-work)
     nix-work = {
       url = "path:./nix-work";
@@ -27,7 +30,7 @@
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, home-manager, llm-agents, ... }:
+  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, home-manager, llm-agents, yawn, ... }:
     let
       system = "x86_64-linux";
 
@@ -42,6 +45,9 @@
       # LLM agent packages from Numtide
       llmPkgs = llm-agents.packages.${system};
 
+      # Yawn worktree navigator
+      yawnPkg = yawn.packages.${system}.default;
+
       # Work-specific module (defaults to ./nix-work; override input for external)
       nixWorkPath =
         if builtins.isPath inputs."nix-work"
@@ -54,7 +60,7 @@
         inherit system;
 
         specialArgs = {
-          inherit pkgs-unstable llmPkgs;
+          inherit pkgs-unstable llmPkgs yawnPkg;
         };
 
         modules = [
