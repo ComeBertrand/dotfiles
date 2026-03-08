@@ -300,11 +300,11 @@
         "nixpkgs": "nixpkgs_3"
       },
       "locked": {
-        "lastModified": 1773008816,
-        "narHash": "sha256-m1lcvjPLZf+RQzgEboepfdkWQ3nzAPW/aNpz4V5l6d4=",
+        "lastModified": 1773010114,
+        "narHash": "sha256-CINqXC/WhgqQpqc9G/RUoaMz6u071Qci+tHmYueOJic=",
         "owner": "ComeBertrand",
         "repo": "yawn",
-        "rev": "ef0596d3c7972ea639d0c5d52f347fb077498786",
+        "rev": "39c7c12c0ca806d6d66b2886f4b4d75e7e5d9098",
         "type": "github"
       },
       "original": {
