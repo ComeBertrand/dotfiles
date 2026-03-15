@@ -14,11 +14,13 @@ in
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      # ./gpu.nix  # Disabled — GPU hardware defect (VBIOS unreadable, RmInitAdapter fails)
       # Work-specific module is injected via flake input (nix-work).
     ];
 
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
+  boot.loader.systemd-boot.configurationLimit = 5;
   boot.loader.efi.canTouchEfiVariables = true;
 
   # Setup keyfile
@@ -86,8 +88,6 @@ in
     enable = true;
     xkb.layout = "us";
     xkb.variant = "";
-    # Load nvidia driver for Xorg and Wayland
-    # videoDrivers = ["nvidia"];
 
     # Only for i3, force manual launch of display manager
     autorun = false;
@@ -188,6 +188,7 @@ in
       glab  # Gitlab CLI
       jq  # json reading for shell scripts
       libnotify  # Desktop notifications (notify-send) for hooks
+      glow  # Markdown renderer for terminal
       yawnPkg  # Worktree navigator + project discovery
     ];
   };
@@ -302,7 +303,6 @@ in
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
-  # nixpkgs.config.cudaSupport = true;
 
   # Allowed unsecure packages
   nixpkgs.config.permittedInsecurePackages = [
