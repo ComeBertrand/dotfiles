@@ -9,12 +9,12 @@
   "effortLevel": "high",
   "skipDangerousModePermissionPrompt": true,
   "hooks": {
-    "Notification": [
+    "UserPromptSubmit": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "~/.local/bin/claude-notify",
+            "command": "zinc hook-notify --event user_prompt_submit",
             "timeout": 5
           }
         ]
@@ -25,7 +25,29 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.local/bin/claude-notify",
+            "command": "zinc hook-notify --event stop",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "idle_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "zinc hook-notify --event notification:idle_prompt",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "permission_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "zinc hook-notify --event notification:permission_prompt",
             "timeout": 5
           }
         ]

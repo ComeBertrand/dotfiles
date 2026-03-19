@@ -1,0 +1,7 @@
+[spawn]
+agent = "claude"
+namer = "yawn prettify {dir}"
+
+[notify]
+command = "notify-send --urgency=critical --app-name=zinc 'zinc: {id}' '{old_state} → {state}'"
+on_states = ["input", "blocked"]

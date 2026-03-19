@@ -23,6 +23,9 @@
     # Worktree navigator + project discovery
     yawn.url = "github:ComeBertrand/yawn";
 
+    # Terminal multiplexer for AI coding agents
+    zinc.url = "github:ComeBertrand/zinc";
+
     # Optional work-specific module (override with --override-input nix-work)
     nix-work = {
       url = "path:./nix-work";
@@ -30,7 +33,7 @@
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, home-manager, llm-agents, yawn, ... }:
+  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, home-manager, llm-agents, yawn, zinc, ... }:
     let
       system = "x86_64-linux";
 
@@ -48,6 +51,9 @@
       # Yawn worktree navigator
       yawnPkg = yawn.packages.${system}.default;
 
+      # Zinc agent multiplexer
+      zincPkg = zinc.packages.${system}.default;
+
       # Work-specific module (defaults to ./nix-work; override input for external)
       nixWorkPath =
         if builtins.isPath inputs."nix-work"
@@ -60,7 +66,7 @@
         inherit system;
 
         specialArgs = {
-          inherit pkgs-unstable llmPkgs yawnPkg;
+          inherit pkgs-unstable llmPkgs yawnPkg zincPkg;
         };
 
         modules = [

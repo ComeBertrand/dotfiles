@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running 'nixos-help').
 
-{ config, pkgs, pkgs-unstable, llmPkgs, yawnPkg, ... }:
+{ config, pkgs, pkgs-unstable, llmPkgs, yawnPkg, zincPkg, ... }:
 
 let
   zellij-autolock = pkgs.fetchurl {
@@ -190,6 +190,7 @@ in
       libnotify  # Desktop notifications (notify-send) for hooks
       glow  # Markdown renderer for terminal
       yawnPkg  # Worktree navigator + project discovery
+      zincPkg  # Terminal multiplexer for AI coding agents
     ];
   };
 
@@ -284,6 +285,10 @@ in
       # Yawn worktree navigator config
       ".config/yawn/config.toml" = {
         source = ./sources/yawn-config.toml;
+      };
+      # Zinc agent multiplexer config
+      ".config/zinc/config.toml" = {
+        source = ./sources/zinc-config.toml;
       };
       # Claude Code user settings (hooks, preferences)
       ".claude/settings.json" = {
