@@ -350,11 +350,11 @@
         "nixpkgs": "nixpkgs_3"
       },
       "locked": {
-        "lastModified": 1773614891,
-        "narHash": "sha256-UUdpgea7JP5Uv2m0VYG1LLHNjdCruMVZ/5bjq6E4PkE=",
+        "lastModified": 1773999015,
+        "narHash": "sha256-G1UBGOPC6uOijqMgGBAT1n5cqtl51EPmuc8q6cxgNpc=",
         "owner": "ComeBertrand",
         "repo": "yawn",
-        "rev": "58779977b4d6a287a0b7886ae52e8fd92abf9abc",
+        "rev": "6b9061907facee45c6f6201e9e3fa49f470fc6a9",
         "type": "github"
       },
       "original": {
@@ -369,11 +369,11 @@
         "nixpkgs": "nixpkgs_4"
       },
       "locked": {
-        "lastModified": 1773911775,
-        "narHash": "sha256-m+lZ/MaSXvIK9sJC1PkTQJYxNT6PE4gQUX8nsaKLrak=",
+        "lastModified": 1774280456,
+        "narHash": "sha256-TGyxWPlT5qQx7nNitiWcfYFfY+qTkH0nNAcxGtdxtaU=",
         "owner": "ComeBertrand",
         "repo": "zinc",
-        "rev": "225323e8668ce012e18426bfccbd8edebdd6ea4e",
+        "rev": "fd39933c4f59238945431332fe55255fbb1cb833",
         "type": "github"
       },
       "original": {

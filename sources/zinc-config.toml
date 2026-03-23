@@ -1,7 +1,14 @@
 [spawn]
-agent = "claude"
+default_agent = "claude"
 namer = "yawn prettify {dir}"
+project_picker = "yawn list --porcelain"
+project_resolver = "yawn resolve {name}"
 
 [notify]
 command = "notify-send --urgency=critical --app-name=zinc 'zinc: {id}' '{old_state} → {state}'"
 on_states = ["input", "blocked"]
+
+[[tui.commands]]
+name = "open in terminal"
+key = "o"
+command = "~/.local/bin/dev-open {dir} {id}"
