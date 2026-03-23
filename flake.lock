@@ -369,11 +369,11 @@
         "nixpkgs": "nixpkgs_4"
       },
       "locked": {
-        "lastModified": 1774286237,
-        "narHash": "sha256-PJ5eWULp0NPyrK1PPb7VgfErNs31c8ZSlAHn1CkWZko=",
+        "lastModified": 1774301544,
+        "narHash": "sha256-B7nYxqYLlj3QnFrLNIl5WfIbceaOHDmSF/8/JL8Z6+U=",
         "owner": "ComeBertrand",
         "repo": "zinc",
-        "rev": "52096cb597b71967890a2a40a3b3ab2ea4e29584",
+        "rev": "e4efd00a66bf74d4d9ffe6fc0f455ce721d255d3",
         "type": "github"
       },
       "original": {
