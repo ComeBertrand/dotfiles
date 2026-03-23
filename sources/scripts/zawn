@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: zawn <branch> [options] [prompt...]
+
+Create a yawn worktree and spawn a zinc agent in it.
+
+Arguments:
+  branch    Branch/worktree name
+  prompt    Initial prompt for the agent (remaining args)
+
+Options:
+  -s, --source REF  Base branch for the worktree
+  -h, --help        Show this help
+EOF
+}
+
+branch=""
+source_branch=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -s|--source) source_branch="$2"; shift 2 ;;
+    -h|--help) usage; exit 0 ;;
+    -*) echo "Unknown option: $1" >&2; usage; exit 1 ;;
+    *)
+      if [[ -z "$branch" ]]; then
+        branch="$1"; shift
+      else
+        break
+      fi
+      ;;
+  esac
+done
+
+[[ -z "$branch" ]] && { usage; exit 1; }
+
+yawn_args=(create "$branch" --init)
+[[ -n "$source_branch" ]] && yawn_args+=(--source "$source_branch")
+dir=$(yawn "${yawn_args[@]}")
+
+if [[ $# -gt 0 ]]; then
+  zinc spawn --new --dir "$dir" "$*"
+else
+  zinc spawn --new --dir "$dir"
+fi
