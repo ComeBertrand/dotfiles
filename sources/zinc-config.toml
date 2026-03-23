@@ -9,6 +9,6 @@ command = "notify-send --urgency=critical --app-name=zinc 'zinc: {id}' '{old_sta
 on_states = ["input", "blocked"]
 
 [[tui.commands]]
-name = "open in terminal"
+name = "open"
 key = "o"
 command = "~/.local/bin/dev-open {dir} {id}"
