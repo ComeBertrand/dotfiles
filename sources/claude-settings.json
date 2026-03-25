@@ -14,7 +14,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "zinc hook-notify --event user_prompt_submit",
+            "command": "tam hook-notify --event user_prompt_submit",
             "timeout": 5
           }
         ]
@@ -25,7 +25,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "zinc hook-notify --event stop",
+            "command": "tam hook-notify --event stop",
             "timeout": 5
           }
         ]
@@ -37,7 +37,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "zinc hook-notify --event notification:idle_prompt",
+            "command": "tam hook-notify --event notification:idle_prompt",
             "timeout": 5
           }
         ]
@@ -47,7 +47,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "zinc hook-notify --event notification:permission_prompt",
+            "command": "tam hook-notify --event notification:permission_prompt",
             "timeout": 5
           }
         ]

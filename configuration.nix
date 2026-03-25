@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running 'nixos-help').
 
-{ config, pkgs, pkgs-unstable, llmPkgs, yawnPkg, zincPkg, ... }:
+{ config, pkgs, pkgs-unstable, llmPkgs, yawnPkg, zincPkg, tamPkg, ... }:
 
 let
   zellij-autolock = pkgs.fetchurl {
@@ -191,6 +191,7 @@ in
       glow  # Markdown renderer for terminal
       yawnPkg  # Worktree navigator + project discovery
       zincPkg  # Terminal multiplexer for AI coding agents
+      tamPkg  # Terminal agent multiplexer
     ];
   };
 
@@ -289,6 +290,10 @@ in
       # Zinc agent multiplexer config
       ".config/zinc/config.toml" = {
         source = ./sources/zinc-config.toml;
+      };
+      # Tam agent multiplexer config
+      ".config/tam/config.toml" = {
+        source = ./sources/tam-config.toml;
       };
       # Claude Code user settings (hooks, preferences)
       ".claude/settings.json" = {

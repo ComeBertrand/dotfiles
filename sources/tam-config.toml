@@ -1,0 +1,22 @@
+[spawn]
+default_agent = "claude"
+
+[worktree]
+root = "~/Workspace/worktrees"
+auto_init = true
+
+[discovery]
+max_depth = 5
+ignore = [".*", "node_modules"]
+
+[session]
+finder = "fzf"
+
+[notify]
+command = "notify-send --urgency=critical --app-name=tam 'tam: {task}' '{status}'"
+on_states = ["input", "blocked"]
+
+[[tui.commands]]
+name = "open"
+key = "o"
+command = "~/.local/bin/dev-open {dir} {id}"
