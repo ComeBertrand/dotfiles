@@ -2,7 +2,7 @@
 " VIM CONFIGURATION
 " ============================================================================
 " A comprehensive Vim setup for modern development with support for:
-" - Python, Rust, TypeScript, LaTeX
+" - Python, Rust, TypeScript
 " - Git integration (Fugitive + GitGutter)
 " - Fuzzy finding (FZF)
 " - Code intelligence via ALE (linting, LSP, completion)
@@ -227,7 +227,6 @@ Plug 'w0rp/ale'                         " Async linting, LSP, completion
 Plug 'HerringtonDarkholme/yats.vim'     " TypeScript syntax
 Plug 'vim-scripts/colorizer'            " Highlight CSS colors
 Plug 'rust-lang/rust.vim'               " Rust language support
-Plug 'lervag/vimtex'                    " LaTeX editing support
 
 " --------------------------------------------------------------------------
 " AI and Completion
