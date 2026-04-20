@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# tam-open - Pick a project with tam + rofi, then launch a dev session
+set -euo pipefail
+
+path=$(tam pick -F "rofi -dmenu -p project -i")
+[ -z "$path" ] && exit 0
+
+name=$(basename "$path")
+exec ~/.local/bin/dev-open "$path" "$name"
