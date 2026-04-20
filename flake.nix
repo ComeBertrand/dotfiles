@@ -20,13 +20,7 @@
       url = "github:numtide/llm-agents.nix";
     };
 
-    # Worktree navigator + project discovery
-    yawn.url = "github:ComeBertrand/yawn";
-
-    # Terminal multiplexer for AI coding agents
-    zinc.url = "github:ComeBertrand/zinc";
-
-    # Terminal multiplexer for AI coding agents
+    # Terminal agent multiplexer
     tam.url = "github:ComeBertrand/tam";
 
     # Optional work-specific module (override with --override-input nix-work)
@@ -36,7 +30,7 @@
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, home-manager, llm-agents, yawn, zinc, tam, ... }:
+  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, home-manager, llm-agents, tam, ... }:
     let
       system = "x86_64-linux";
 
@@ -50,12 +44,6 @@
 
       # LLM agent packages from Numtide
       llmPkgs = llm-agents.packages.${system};
-
-      # Yawn worktree navigator
-      yawnPkg = yawn.packages.${system}.default;
-
-      # Zinc agent multiplexer
-      zincPkg = zinc.packages.${system}.default;
 
       # Tam agent multiplexer
       tamPkg = tam.packages.${system}.default;
@@ -72,7 +60,7 @@
         inherit system;
 
         specialArgs = {
-          inherit pkgs-unstable llmPkgs yawnPkg zincPkg tamPkg;
+          inherit pkgs-unstable llmPkgs tamPkg;
         };
 
         modules = [

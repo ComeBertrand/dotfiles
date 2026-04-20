@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running 'nixos-help').
 
-{ config, pkgs, pkgs-unstable, llmPkgs, yawnPkg, zincPkg, tamPkg, ... }:
+{ config, pkgs, pkgs-unstable, llmPkgs, tamPkg, ... }:
 
 let
   zellij-autolock = pkgs.fetchurl {
@@ -188,8 +188,6 @@ in
       jq  # json reading for shell scripts
       libnotify  # Desktop notifications (notify-send) for hooks
       glow  # Markdown renderer for terminal
-      yawnPkg  # Worktree navigator + project discovery
-      zincPkg  # Terminal multiplexer for AI coding agents
       tamPkg  # Terminal agent multiplexer
     ];
   };
@@ -281,14 +279,6 @@ in
       # Rofi launcher config
       ".config/rofi/config.rasi" = {
         source = ./sources/rofi-config.rasi;
-      };
-      # Yawn worktree navigator config
-      ".config/yawn/config.toml" = {
-        source = ./sources/yawn-config.toml;
-      };
-      # Zinc agent multiplexer config
-      ".config/zinc/config.toml" = {
-        source = ./sources/zinc-config.toml;
       };
       # Tam agent multiplexer config
       ".config/tam/config.toml" = {
