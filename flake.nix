@@ -23,6 +23,20 @@
     # Terminal agent multiplexer
     tam.url = "github:ComeBertrand/tam";
 
+    # Zen browser with hardened Home Manager module
+    # Follows nixpkgs-unstable for libgbm (not in 25.11 stable)
+    zen-browser = {
+      url = "github:0xc000022070/zen-browser-flake";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+      inputs.home-manager.follows = "home-manager";
+    };
+
+    # Nix-packaged Firefox add-ons (for Zen extensions)
+    firefox-addons = {
+      url = "gitlab:rycee/nur-expressions?dir=pkgs/firefox-addons";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+
     # Optional work-specific module (override with --override-input nix-work)
     nix-work = {
       url = "path:./nix-work";
@@ -73,6 +87,8 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
+            # Forward flake inputs to HM modules (needed by sources/zen.nix)
+            home-manager.extraSpecialArgs = { inherit inputs; };
           }
         ];
       };

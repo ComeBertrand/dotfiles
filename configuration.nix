@@ -193,6 +193,7 @@ in
   };
 
   home-manager.users.cbertrand = { pkgs, ... }: {
+    imports = [ ./sources/zen.nix ];
     home.stateVersion = "23.05";
     home.file = {
       # Git config (email, ...)
