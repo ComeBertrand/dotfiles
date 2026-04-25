@@ -152,7 +152,7 @@ in
     packages = with pkgs; [
       firefox  # browser
       git  # source control
-      zellij  # terminal multiplexer
+      pkgs-unstable.zellij  # terminal multiplexer (unstable: 25.11 rustc too old)
       ranger  # file manager
       docker-compose  # enable composing of containers
       slack  # communication platform
@@ -312,7 +312,7 @@ in
 
   environment.systemPackages = with pkgs; [
     python313
-    uv  # python package manager
+    pkgs-unstable.uv  # python package manager
     (vim-full.override { python3 = pkgs.python313; })  # Keep vim as fallback
     neovim  # Modern editor with native LSP support
     telepresence2  # Allow direct connection to cluster
@@ -329,8 +329,9 @@ in
     system-config-printer
     # LLM coding agents (from numtide/llm-agents.nix, auto-updated daily)
     llmPkgs.claude-code
-    llmPkgs.gemini-cli
-    llmPkgs.codex
+    pkgs-unstable.codex
+    # CLI for fly.io
+    pkgs-unstable.flyctl
     dmidecode
     gcc
     gnumake
