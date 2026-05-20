@@ -24,8 +24,10 @@ in
   boot.loader.efi.canTouchEfiVariables = true;
 
   # Pinned for CVE-2026-31431 (Copy Fail) — needs kernel ≥ 6.18.22.
+  # 6.18.29 had an iwlwifi/iwlmvm regression on AX211 (driver loaded ucode
+  # but stalled before PNVM/netdev creation), so we use the 7.0 line instead.
   # Unpin once the 6.12 LTS line picks up the backport.
-  boot.kernelPackages = pkgs.linuxPackages_6_18;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   # Setup keyfile
   boot.initrd.secrets = {
