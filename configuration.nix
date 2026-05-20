@@ -23,6 +23,10 @@ in
   boot.loader.systemd-boot.configurationLimit = 5;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  # Pinned for CVE-2026-31431 (Copy Fail) — needs kernel ≥ 6.18.22.
+  # Unpin once the 6.12 LTS line picks up the backport.
+  boot.kernelPackages = pkgs.linuxPackages_6_18;
+
   # Setup keyfile
   boot.initrd.secrets = {
     "/crypto_keyfile.bin" = null;
@@ -108,6 +112,8 @@ in
         dmenu # application launcher
         i3status # status bar
         i3lock # screen locker
+        xss-lock # lock on suspend + on X screensaver event
+        xorg.xset # sets the X screensaver idle timeout
       ];
     };
   };
@@ -394,11 +400,11 @@ in
   # Enable the OpenSSH daemon.
   # services.openssh.enable = true;
 
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
+  networking.firewall = {
+    enable = true;
+    allowedTCPPorts = [ ];
+    allowedUDPPorts = [ ];
+  };
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
