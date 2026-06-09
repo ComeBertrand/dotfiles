@@ -4,10 +4,9 @@
     "pr": ""
   },
   "permissions": {
-    "defaultMode": "bypassPermissions"
+    "defaultMode": "auto"
   },
-  "effortLevel": "xhigh",
-  "skipDangerousModePermissionPrompt": true,
+  "effortLevel": "max",
   "hooks": {
     "UserPromptSubmit": [
       {
