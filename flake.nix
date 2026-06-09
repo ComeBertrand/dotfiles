@@ -2,15 +2,15 @@
   description = "NixOS configuration with Nix Flakes for reproducible builds";
 
   inputs = {
-    # NixOS 25.11 stable
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    # NixOS 26.05 stable
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
 
     # NixOS unstable for bleeding-edge packages
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-    # Home Manager release-25.11
+    # Home Manager release-26.05
     home-manager = {
-      url = "github:nix-community/home-manager/release-25.11";
+      url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

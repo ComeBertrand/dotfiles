@@ -70,8 +70,10 @@ in
 
   services.resolved = {
     enable = true;
-    dnssec = "allow-downgrade";
-    fallbackDns = [ "192.168.1.1" ];  # demote router to fallback
+    settings.Resolve = {
+      DNSSEC = "allow-downgrade";
+      FallbackDNS = [ "192.168.1.1" ];  # demote router to fallback
+    };
   };# Tell NetworkManager to prepend these as per-link DNS
 
   # Enable networking
@@ -115,7 +117,7 @@ in
         i3status # status bar
         i3lock # screen locker
         xss-lock # lock on suspend + on X screensaver event
-        xorg.xset # sets the X screensaver idle timeout
+        xset # sets the X screensaver idle timeout
       ];
     };
   };
@@ -347,12 +349,12 @@ in
     # LSP servers for Neovim
     pyright  # Python LSP
     pkgs-unstable.rust-analyzer  # Rust LSP
-    nodePackages.typescript-language-server  # TypeScript LSP
+    typescript-language-server  # TypeScript LSP
     lua-language-server  # Lua LSP
     # Formatters/linters (shared with Vim ALE)
     ruff  # Python linter/formatter
-    nodePackages.prettier  # JS/TS formatter
-    nodePackages.eslint  # JS/TS linter
+    prettier  # JS/TS formatter
+    eslint  # JS/TS linter
   ];
 
   environment.variables.EDITOR = "nvim";

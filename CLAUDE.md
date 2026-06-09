@@ -193,7 +193,7 @@ dotfiles/
 
 - **User:** cbertrand
 - **Hostname:** wiremind
-- **NixOS:** 25.05 (+ unstable flake input for bleeding-edge)
+- **NixOS:** 26.05 (+ unstable flake input for bleeding-edge)
 - **Config Style:** Nix Flakes (reproducible builds via flake.lock)
 - **Window Manager:** i3
 - **Editor (primary):** Neovim with native LSP, Treesitter, lazy.nvim
@@ -209,9 +209,9 @@ dotfiles/
 - `../nix-work` - Work-specific config (scripts auto-override `nix-work` input)
 
 **Managed by flake.nix (no manual setup needed):**
-- nixpkgs 25.05 (stable)
+- nixpkgs 26.05 (stable)
 - nixpkgs-unstable (bleeding-edge packages)
-- home-manager release-25.05
+- home-manager release-26.05
 
 All dependencies are pinned in `flake.lock` for reproducibility.
 
@@ -333,8 +333,8 @@ echo "My script"
 **NixOS version upgrade:**
 ```nix
 # In flake.nix - update nixpkgs input URL
-nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
-home-manager.url = "github:nix-community/home-manager/release-25.05";
+nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+home-manager.url = "github:nix-community/home-manager/release-26.05";
 ```
 ```bash
 nix flake update
@@ -399,4 +399,4 @@ For comprehensive details, see:
 
 ---
 
-**Last Updated:** 2026-02-04
+**Last Updated:** 2026-06-09
