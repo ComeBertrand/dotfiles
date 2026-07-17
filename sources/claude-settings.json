@@ -6,7 +6,7 @@
   "permissions": {
     "defaultMode": "auto"
   },
-  "effortLevel": "max",
+  "effortLevel": "xhigh",
   "hooks": {
     "UserPromptSubmit": [
       {
