@@ -9,6 +9,27 @@ let
     url = "https://github.com/fresh2dev/zellij-autolock/releases/download/0.2.2/zellij-autolock.wasm";
     sha256 = "194fgd421w2j77jbpnq994y2ma03qzdlz932cxfhfznrpw3mdjb9";
   };
+
+  # Syncthing peers — the ONLY place to edit when adding a machine.
+  # Device IDs are public (not secrets), so they belong in this repo.
+  #
+  # To pair a new machine:
+  #   1. On that machine, get its ID:  syncthing --device-id
+  #      (or web UI at localhost:8384 → Actions → Show ID)
+  #   2. Add it below, uncommented, then run ./recrank.sh
+  #   3. Do the mirror-image setup there, using THIS machine's ID:
+  #      syncthing --device-id --config=/home/cbertrand/.config/syncthing
+  #   4. Folder IDs ("documents"/"workspace") must match on both ends;
+  #      the local paths may differ.
+  #
+  # While this is empty the folders are declared but shared with nobody —
+  # syncthing runs, generates this machine's ID, and waits.
+  # NOTE: overrideDevices = true below means pairing via the web UI gets
+  # reverted on the next rebuild. Pairing happens here, not in the GUI.
+  syncthingPeers = {
+    # laptop = "AAAAAAA-BBBBBBB-CCCCCCC-DDDDDDD-EEEEEEE-FFFFFFF-GGGGGGG-HHHHHHH";
+  };
+  syncthingPeerNames = builtins.attrNames syncthingPeers;
 in
 {
   imports =
@@ -404,8 +425,87 @@ in
   # Enable the OpenSSH daemon.
   # services.openssh.enable = true;
 
+  # File sync between machines. Peers are declared in `syncthingPeers` at the
+  # top of this file; everything else is derived from it.
+  services.syncthing = {
+    enable = true;
+    user = "cbertrand";
+    group = "users";  # match the rest of $HOME, so synced files aren't cbertrand:syncthing
+    dataDir = "/home/cbertrand";  # service working dir + base for configDir
+    configDir = "/home/cbertrand/.config/syncthing";  # device ID & keys live here
+
+    # Opens 22000/tcp+udp (transfers) and 21027/udp (LAN discovery).
+    openDefaultPorts = true;
+    # Web UI stays on 127.0.0.1:8384 (module default) — never exposed to the LAN.
+
+    # This repo is the source of truth: devices/folders added in the web UI are
+    # deleted on rebuild. Both default to true; stated explicitly as a reminder.
+    overrideDevices = true;
+    overrideFolders = true;
+
+    settings = {
+      devices = builtins.mapAttrs (_name: id: { inherit id; }) syncthingPeers;
+
+      # Keyed by short name → that name becomes the folder ID, which must match
+      # on every peer. Paths are set explicitly so they can differ per machine.
+      folders = {
+        documents = {
+          path = "/home/cbertrand/Documents";
+          devices = syncthingPeerNames;
+          # Deletions land in .stversions instead of being propagated away.
+          versioning = {
+            type = "trashcan";
+            params.cleanoutDays = "30";
+          };
+        };
+
+        workspace = {
+          path = "/home/cbertrand/Workspace";
+          devices = syncthingPeerNames;
+          versioning = {
+            type = "trashcan";
+            params.cleanoutDays = "30";
+          };
+          # Without these, syncthing would ship every venv, node_modules and
+          # target/ dir across the wire. Patterns without a slash match at any
+          # depth. Applied via syncthing's REST API on rebuild.
+          ignorePatterns = [
+            "// Build & dependency dirs"
+            ".venv"
+            "venv"
+            "node_modules"
+            "target"
+            "dist"
+            "build"
+            ".next"
+            "// Nix build outputs"
+            "result"
+            "result-*"
+            "// Tool caches"
+            ".direnv"
+            "__pycache__"
+            "*.pyc"
+            ".mypy_cache"
+            ".pytest_cache"
+            ".ruff_cache"
+            ".cache"
+            "// Editor/OS noise"
+            "*.swp"
+            ".DS_Store"
+          ];
+        };
+      };
+
+      options = {
+        urAccepted = -1;  # decline anonymous usage reporting
+        relaysEnabled = true;  # allow sync when the peers aren't on the same LAN
+      };
+    };
+  };
+
   networking.firewall = {
     enable = true;
+    # Syncthing's ports are added by services.syncthing.openDefaultPorts.
     allowedTCPPorts = [ ];
     allowedUDPPorts = [ ];
   };
