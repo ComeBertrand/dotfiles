@@ -1,9 +1,12 @@
 # CLAUDE.md - AI Assistant Guide for NixOS Dotfiles Repository
 
-**Last Updated:** 2026-02-04
+**Last Updated:** 2026-08-03
 **Repository Owner:** Come Bertrand
-**NixOS Version:** 25.05
-**System State Version:** 23.05
+**NixOS Version:** 26.05 (flake-based)
+**System State Version:** 23.05 (first-install marker — do not bump)
+
+> Companion documents: [CLAUDE.md](../CLAUDE.md) for quick change recipes,
+> [README.md](../README.md) for the step-by-step install manual.
 
 ---
 
@@ -13,73 +16,108 @@
 2. [Codebase Structure](#codebase-structure)
 3. [Key Files Reference](#key-files-reference)
 4. [Development Workflow](#development-workflow)
-5. [NixOS-Specific Conventions](#nixos-specific-conventions)
-6. [Vim Configuration](#vim-configuration)
+5. [Flake Conventions](#flake-conventions)
+6. [Editor Configuration](#editor-configuration)
 7. [Git Conventions](#git-conventions)
 8. [Maintenance Procedures](#maintenance-procedures)
 9. [AI Assistant Guidelines](#ai-assistant-guidelines)
+10. [Quick Reference](#quick-reference)
 
 ---
 
 ## Repository Overview
 
-This is a **NixOS dotfiles repository** that manages system-wide and user-specific configuration for a development workstation. It uses:
+A **NixOS dotfiles repository** managing system-wide and user-specific configuration for a
+development workstation, built on **Nix flakes** (not channels). It uses:
 
-- **NixOS** for declarative system configuration
-- **Home Manager** (25.05) for user-level dotfile management
+- **NixOS 26.05** for declarative system configuration
+- **Home Manager** (`release-26.05`, wired as a flake input) for user dotfiles
 - **i3 window manager** as the desktop environment
-- **Vim** as the primary text editor with extensive LSP/linting setup
-- **Bash** as the default shell
+- **Neovim** as the primary editor (native LSP, Treesitter, lazy.nvim)
+- **Vim** retained as a fallback editor (ALE-based)
+- **kitty** as the terminal, with **zellij** as multiplexer
+- **Bash** as the default shell, with direnv
 - **Docker** for containerization
-- **Kubernetes tooling** (kubectl, helm, k9s, telepresence)
+- **Kubernetes tooling** (kubectl, helm, k9s, telepresence2)
+- **Syncthing** for file sync between machines
 
 ### Primary Use Cases
-- Python development (with pyright, ruff)
-- Rust development (with rust-analyzer, rustfmt)
-- TypeScript development (with tsserver, eslint)
-- LaTeX document preparation
+- Python development (pyright, ruff)
+- Rust development (rust-analyzer via rustaceanvim, rustfmt)
+- TypeScript development (ts_ls, eslint, prettier)
 - Kubernetes cluster management
 - AWS cloud infrastructure work
+- LLM coding agents (claude-code, codex, tam)
 
 ---
 
 ## Codebase Structure
 
 ```
-/home/user/dotfiles/
+/home/cbertrand/dotfiles/
+├── flake.nix                      # Flake inputs & outputs (nixosConfigurations.wiremind)
+├── flake.lock                     # Pinned input versions — ALWAYS COMMIT
 ├── configuration.nix              # Main NixOS system configuration
-├── hardware-configuration.nix     # Hardware-specific settings (auto-generated)
-├── README.md                      # Setup and startup manual
-├── .gitignore                     # Git ignore rules (*.swp, *.swo)
+├── hardware-configuration.nix     # Machine-specific, auto-generated (DON'T EDIT)
+├── gpu.nix                        # NVIDIA/Intel hybrid graphics — currently DISABLED
+│                                  #   (commented out in configuration.nix imports:
+│                                  #    GPU hardware defect, VBIOS unreadable)
+├── CLAUDE.md                      # Quick change recipes
+├── README.md                      # Step-by-step install manual
+├── nix-work/default.nix           # Optional work module stub (override the input)
+├── docs/CLAUDE_COMPREHENSIVE.md   # This file
 │
-├── sources/                       # User configuration files
-│   ├── config.nix                 # Nixpkgs custom config
-│   ├── vimrc                      # Comprehensive Vim configuration
-│   ├── bashrc.sh                  # Bash interactive shell config
-│   ├── bash_profile.sh            # Bash login shell config
-│   ├── bash_prompt.sh             # Custom prompt configuration
-│   ├── path.sh                    # PATH additions
-│   ├── aliases.sh                 # Shell aliases (e.g., clippy alias)
-│   ├── direnvrc.sh                # Direnv custom functions
-│   ├── gitconfig.conf             # Git user config & aliases
-│   ├── zellij.kdl                 # Zellij configuration
-│   ├── i3config.conf              # i3 window manager config
-│   ├── xresources                 # X11 resources (colors, URxvt)
-│   ├── gpg-agent.conf             # GPG agent configuration
-│   ├── rxvt-resize-font           # URxvt font resizing plugin
-│   │
-│   └── scripts/                   # Custom utility scripts
-│       ├── screenz                # Auto-configure monitors
-│       ├── startdm                # Start display manager
-│       ├── switchkb               # Toggle US/FR keyboard layouts
-│       ├── setexclude             # Configure git info/exclude
-│       └── k9                     # K9s wrapper
+├── recrank.sh                     # Rebuild & switch (flake-based)
+├── upgrade.sh                     # nix flake update + rebuild
+├── cleanup.sh                     # GC generations older than 15 days
+├── cleanup-hard.sh                # GC everything unreferenced
 │
-└── Shell scripts (root level)
-    ├── recrank.sh                 # Main rebuild script
-    ├── upgrade.sh                 # Package upgrade helper
-    ├── cleanup.sh                 # System cleanup
-    └── cleanup-hard.sh            # Aggressive cleanup
+└── sources/                       # All dotfiles live here
+    ├── CLAUDE.md                  # Notes scoped to this directory
+    ├── config.nix                 # User-level nixpkgs config
+    ├── zen.nix                    # Zen browser Home Manager module (declarative extensions)
+    │
+    ├── nvim/                      # PRIMARY editor
+    │   ├── init.lua               # Entry point
+    │   └── lua/
+    │       ├── config/
+    │       │   ├── options.lua    # Core settings
+    │       │   ├── keymaps.lua    # Global keymaps
+    │       │   ├── autocmds.lua   # Autocommands (incl. Python \x pudb mapping)
+    │       │   └── lsp.lua        # Diagnostics + on-attach LSP keymaps
+    │       └── plugins/init.lua   # lazy.nvim plugin specs & configuration
+    ├── vimrc                      # FALLBACK editor (ALE, vim-plug, Copilot)
+    │
+    ├── bashrc.sh                  # Interactive shell
+    ├── bash_profile.sh            # Login shell
+    ├── bash_prompt.sh             # Prompt
+    ├── path.sh                    # PATH (~/.local/bin) + TMPDIR (~/.local/tmp)
+    ├── aliases.sh                 # Shell aliases
+    ├── direnvrc.sh                # direnv custom functions
+    ├── direnv.toml                # direnv config (auto-allow Workspace)
+    ├── gitconfig.conf             # Git identity + `tree` alias
+    ├── gpg-agent.conf             # GPG agent
+    ├── i3config.conf              # i3 window manager
+    ├── kitty.conf                 # Terminal
+    ├── rofi-config.rasi           # Application launcher
+    ├── zellij.kdl                 # Multiplexer config
+    ├── zellij-layout.kdl          # Default layout
+    ├── zellij-layout-dev.kdl      # Dev layout (nvim + two terminals)
+    ├── yazi.toml                  # File manager
+    ├── yazi_keymap.toml           # File manager keymaps
+    ├── tam-config.toml            # Terminal agent multiplexer
+    ├── claude-settings.json       # Claude Code user settings
+    │
+    └── scripts/                   # Symlinked to ~/.local/bin
+        ├── screenz                # Auto-configure monitors
+        ├── startdm                # Start X11/i3 (REQUIRED — autorun disabled)
+        ├── switchkb               # Toggle US/FR keyboard layouts
+        ├── nixinit                # Scaffold .envrc + shell.nix + git excludes
+        ├── dcs                    # Docker Compose services helper
+        ├── k9                     # Pick a process with fzf and kill it
+        ├── dev-open               # Open kitty + zellij session for a directory
+        ├── tam-open               # Pick a project via rofi, launch dev session
+        └── morning                # Startup housekeeping (systemd user service)
 ```
 
 ---
@@ -88,104 +126,95 @@ This is a **NixOS dotfiles repository** that manages system-wide and user-specif
 
 ### Core NixOS Configuration
 
+#### `flake.nix`
+**Purpose:** Entry point. Defines inputs and the `nixosConfigurations.wiremind` output.
+
+**Inputs:**
+
+| Input | Purpose |
+|---|---|
+| `nixpkgs` | NixOS 26.05 stable |
+| `nixpkgs-unstable` | Bleeding-edge packages, imported with `allowUnfree` |
+| `home-manager` | `release-26.05`, follows `nixpkgs` |
+| `llm-agents` | claude-code and friends (Numtide, daily-updated, binary cache) |
+| `tam` | Terminal agent multiplexer |
+| `zen-browser` | Zen browser + hardened HM module (follows `nixpkgs-unstable`) |
+| `firefox-addons` | rycee NUR add-ons, hash-pinned for Zen |
+| `nix-work` | Optional work module, `flake = false`, defaults to the in-repo stub |
+
+**Passed to modules via `specialArgs`:** `pkgs-unstable`, `llmPkgs`, `tamPkg`.
+Flake `inputs` are forwarded to Home Manager via `extraSpecialArgs` (needed by `zen.nix`).
+
 #### `configuration.nix`
-**Purpose:** Main system configuration entry point
+**Purpose:** Main system configuration.
 
-**Key Areas:**
-- Boot configuration (systemd-boot, EFI)
-- System hostname and networking
-- Locale and timezone settings
-- Display server configuration (X11 + i3 window manager)
-- Virtualization (Docker)
-- User account management and package installation
-- Home Manager integration for dotfile management
-- Package permissions (unfree and insecure packages)
-- System-wide packages and tools
-- nix-ld for running pre-built executables
+**Key areas:** boot (systemd-boot + EFI, `configurationLimit = 5`), kernel pinning,
+hostname/networking (NetworkManager + systemd-resolved), locale, X11 + i3, pipewire,
+Docker, user account, Home Manager `home.file` links, Syncthing, nix settings, firewall.
 
-**Important Notes:**
-- Home Manager module wired via flake (no NIX_PATH channel required)
-- Work module is an optional flake input (defaults to repo stub; override to `../nix-work`)
-- X11 autorun disabled - requires manual `startdm` to start display manager
-- Uses `pkgs-unstable` from flake input for bleeding-edge packages
+**Important notes:**
+- Home Manager is wired via flake — **no channel required**
+- Work module is an optional flake input (stub by default; override to `../nix-work`)
+- X11 autorun disabled — requires manual `startdm`
+- `pkgs-unstable.*` for bleeding-edge packages (zellij, uv, yazi, codex, flyctl, rust-analyzer)
+- Kernel is pinned to `linuxPackages_latest` for CVE-2026-31431; see the inline comment
+  before changing (the 6.18 line had an iwlwifi/AX211 regression)
 
 #### `hardware-configuration.nix`
-**Purpose:** Auto-generated hardware detection
-**Convention:** DO NOT manually edit unless necessary; regenerate with `nixos-generate-config`
+**Purpose:** Auto-generated hardware detection. Pins filesystem UUIDs and the LUKS device.
+**Convention:** DO NOT edit. Regenerate with
+`sudo nixos-generate-config --show-hardware-config > hardware-configuration.nix`.
+Machine-specific — reusing it on other hardware produces an unbootable system.
 
 #### `sources/config.nix`
-**Purpose:** User-level nixpkgs configuration
-**Usage:** Allows specific package overrides and permissions for user-level nix commands
+**Purpose:** User-level nixpkgs configuration. Mirrors `permittedInsecurePackages` so
+user-level `nix` commands behave like the system.
 
----
+#### `sources/zen.nix`
+**Purpose:** Zen browser Home Manager module. Extensions are **declarative** —
+uBlock Origin, Bitwarden and ClearURLs come from the `firefox-addons` NUR; Proton Pass and
+Proton VPN are force-installed via `policies.ExtensionSettings` because they are not
+packaged there. Plain `firefox` is also installed but is *not* configured declaratively.
 
-### Vim Configuration
+### Services
 
-#### `sources/vimrc`
-**Purpose:** Comprehensive Vim setup for polyglot development
-**Architecture:** Well-organized into sections with extensive inline documentation
+#### Syncthing
+Declared in `configuration.nix`, runs as `cbertrand:users` with config in
+`~/.config/syncthing` and the web UI bound to `127.0.0.1:8384` (never exposed to the LAN).
+`openDefaultPorts = true` opens 22000/tcp+udp and 21027/udp.
 
-**Key Features:**
-- **Plugin Manager:** vim-plug (auto-installs if missing)
-- **LSP/Linting:** ALE with async linting and language servers for Python, Rust, TypeScript
-- **Completion:** LSP-powered code completion
-- **Git Integration:** Full Git workflow support with fugitive and gitgutter
-- **Navigation:** Fuzzy finding (FZF), file explorer (Ranger), code structure (Tagbar)
-- **AI Assistance:** GitHub Copilot integration
-- **Testing:** Integrated test runner support
-- **Visual:** Gruvbox dark theme with customized UI
+**Peers are managed through the `syncthingPeers` attrset in the `let` block at the top of
+`configuration.nix`** — devices and both folders' share lists derive from it, so it is the
+only place to edit. `overrideDevices`/`overrideFolders` are `true`, meaning devices or
+folders added through the web UI are **deleted on the next rebuild**.
 
-**Configuration Philosophy:**
-- Auto-fix on save for supported languages
-- Persistent undo across sessions
-- Hybrid line numbers for efficient navigation
-- System clipboard integration
-- Extensive keybindings documented in file (Leader = `\`)
+Folders (IDs must match across machines; paths may differ):
 
----
+| ID | Path | Notes |
+|---|---|---|
+| `documents` | `~/Documents` | trashcan versioning, 30 days |
+| `workspace` | `~/Workspace` | trashcan versioning + `ignorePatterns` |
+
+The `workspace` ignore patterns (`.venv`, `node_modules`, `target`, `.direnv`, caches,
+Nix `result` symlinks) cut it from ~103 G to ~4 G. Add any new build directory there.
+Patterns are applied through Syncthing's REST API on rebuild.
+
+Note that `overrideDevices = true` also means **pairing cannot be done in the GUI** — it
+must go through the repo. See README section 5.4 for the full pairing flow.
+
+#### `morning` (systemd user service)
+Runs `~/.local/bin/morning` at login (`Type = oneshot`, wanted by `default.target`).
+Purges dead zellij sessions.
 
 ### Shell Configuration
 
-#### `sources/bashrc.sh`
-**Purpose:** Interactive bash shell initialization
-**Key Features:**
-- Loads bash profile for login shell compatibility
-- Direnv integration for per-directory environments
-- SSH agent auto-start
-- Custom aliases with enhanced ls output
-
-#### `sources/bash_profile.sh`
-**Purpose:** Login shell initialization (sources PATH, aliases, prompt configuration)
-
-#### `sources/aliases.sh`
-**Purpose:** Custom shell command aliases and shortcuts
-
-#### `sources/gitconfig.conf`
-**Purpose:** Git user configuration and custom aliases
-
----
-
-### Utility Scripts
-
-#### `recrank.sh`
-**Purpose:** Main rebuild script for applying NixOS configuration changes
-**Usage:** Run from repository root after editing configuration files
-
-#### `sources/scripts/screenz`
-**Purpose:** Automatically configure monitor layout
-**Usage:** Run when monitors are connected/disconnected
-
-#### `sources/scripts/switchkb`
-**Purpose:** Toggle between US and FR keyboard layouts
-**Usage:** Typically bound to i3 hotkey for quick switching
-
-#### `sources/scripts/startdm`
-**Purpose:** Manually start X11 display manager
-**Context:** Required because X11 autorun is disabled
-
-#### `sources/scripts/setexclude`
-**Purpose:** Configure git local excludes
-**Usage:** Run in new repositories to set up project-specific ignore patterns
+| File | Purpose |
+|---|---|
+| `sources/bashrc.sh` | Interactive shell: direnv hook, SSH agent auto-start, ls aliases |
+| `sources/bash_profile.sh` | Login shell: sources `.path`, `.aliases`, `.bash_prompt` |
+| `sources/path.sh` | Prepends `~/.local/bin`; sets `TMPDIR=~/.local/tmp` |
+| `sources/aliases.sh` | Shell aliases |
+| `sources/gitconfig.conf` | Git identity and the `tree` alias |
 
 ---
 
@@ -193,163 +222,192 @@ This is a **NixOS dotfiles repository** that manages system-wide and user-specif
 
 ### Making Configuration Changes
 
-1. **Edit Configuration Files**
-   - Modify `configuration.nix` or files in `sources/`
-   - Follow Nix syntax conventions (functions, attribute sets)
+1. **Edit** `configuration.nix` or files under `sources/`.
 
-2. **Test Changes**
+2. **`git add` any new file.** Flakes only evaluate **git-tracked** files, so an untracked
+   new file is invisible and produces confusing "file not found" errors:
    ```bash
-   # Dry-run (optional, see README for details)
-   sudo bash -x $(nix-build --no-out-link '<nixos/nixos>' -A system -I nixos-config=configuration.nix)/activate
-
-   # Apply changes
-   ./recrank.sh
-   # OR manually:
-   sudo nixos-rebuild switch -I nixos-config=configuration.nix --verbose
+   git add sources/myapp.toml
    ```
 
-3. **Verify**
-   - Check that services are running
-   - Test new package installations
-   - Verify dotfile symlinks in home directory
+3. **Verify it builds without switching** — the safest pre-commit check:
+   ```bash
+   nix build .#nixosConfigurations.wiremind.config.system.build.toplevel --no-link
+   ```
+   Or evaluate a single option to inspect the result:
+   ```bash
+   nix eval .#nixosConfigurations.wiremind.config.services.syncthing.settings --json
+   ```
+   Add `--override-input nix-work path:../nix-work` when the work module is present
+   (`recrank.sh` does this automatically).
 
-4. **Commit Changes**
-   - Use descriptive commit messages (see [Git Conventions](#git-conventions))
-   - Follow existing patterns: `feat:`, `fix:`, `chore:`
+4. **Apply:**
+   ```bash
+   ./recrank.sh
+   ```
+
+5. **Verify** services are running, packages resolve, and Home Manager symlinks landed.
+
+6. **Commit** following the conventions below.
 
 ### Adding New Packages
 
-**User Packages** (installed for user cbertrand only):
-- Edit `configuration.nix` under `users.users.cbertrand.packages`
-- Add package from nixpkgs
+| Scope | Location |
+|---|---|
+| User only | `users.users.cbertrand.packages` |
+| All users | `environment.systemPackages` |
+| Bleeding-edge | prefix with `pkgs-unstable.` |
+| LLM agents | `llmPkgs.<name>` (from the `llm-agents` input) |
 
-**System Packages** (available to all users):
-- Edit `configuration.nix` under `environment.systemPackages`
-- For unstable packages, use pattern: `unstable.package-name`
-
-**Unfree Packages:**
-- Already allowed globally via `nixpkgs.config.allowUnfree`
-
-**Insecure Packages:**
-- Add to `nixpkgs.config.permittedInsecurePackages` in `configuration.nix`
-- Also update `sources/config.nix` for user-level commands
+Unfree packages are already allowed via `nixpkgs.config.allowUnfree`. Insecure packages go
+in `nixpkgs.config.permittedInsecurePackages` **and** `sources/config.nix`.
 
 ### Adding New Dotfiles
 
-1. **Create source file** in `sources/` directory
-2. **Link via Home Manager** in `configuration.nix` under `home-manager.users.cbertrand.home.file`
-3. **Example pattern:**
+1. Create the source file in `sources/`
+2. `git add` it
+3. Link under `home-manager.users.cbertrand.home.file`:
    ```nix
    ".config/myapp/config.toml" = {
      source = ./sources/myapp.toml;
    };
    ```
-4. **Run `./recrank.sh`** to activate
+4. `./recrank.sh`
 
 ---
 
-## NixOS-Specific Conventions
+## Flake Conventions
 
-### Channel Management
+This repo migrated from channels to flakes. **`nix-channel` plays no role** — any
+instruction to add or update a channel is obsolete. Input versions are pinned in
+`flake.lock`.
 
-**Current Channels:**
-- Main: nixos-25.05
-- Unstable: nixos-unstable (for bleeding-edge packages)
+### Updating Inputs
 
-**Important:** ALWAYS use `sudo` with `nix-channel` commands:
 ```bash
-# CORRECT
-sudo nix-channel --add <url> <name>
-sudo nix-channel --update
-
-# INCORRECT (will silently fail)
-nix-channel --add <url> <name>
+nix flake update          # refresh all inputs in flake.lock
+./upgrade.sh              # nix flake update + rebuild + switch
+nix flake metadata        # inspect what is currently pinned
 ```
+
+**Always commit `flake.lock`.** It is what makes builds reproducible.
 
 ### Upgrading NixOS Version
 
-Follow guide: https://nixos.org/manual/nixos/stable/index.html#sec-upgrading
+Bump `nixpkgs` and `home-manager` **together** — they must stay on the same release:
 
-1. Update channels to new version
-2. Run `sudo nix-channel --update`
-3. Run `./upgrade.sh` or `sudo nixos-rebuild switch --upgrade`
-4. Reboot system
-
-### Package Upgrades
-
-See: https://superuser.com/questions/1604694/how-to-update-every-package-on-nixos
+```nix
+nixpkgs.url = "github:NixOS/nixpkgs/nixos-XX.XX";
+home-manager.url = "github:nix-community/home-manager/release-XX.XX";
+```
 
 ```bash
-# Update all packages
-./upgrade.sh
-
-# Manual approach
-sudo nixos-rebuild switch --upgrade --verbose
+nix flake update
+./recrank.sh
+sudo reboot
 ```
+
+Leave `system.stateVersion` at `23.05` — it records the release this machine was *first*
+installed with, not the current one. Changing it can badly migrate stateful services.
 
 ### Nix Language Patterns
 
-**Attribute Sets:**
+**Unstable packages** come from `specialArgs`, not a channel import:
 ```nix
-{ key = value; key2 = value2; }
+{ config, pkgs, pkgs-unstable, llmPkgs, tamPkg, ... }:
+
+environment.systemPackages = [ pkgs-unstable.yazi llmPkgs.claude-code tamPkg ];
 ```
 
-**List Concatenation:**
-```nix
-[ item1 item2 ] ++ [ item3 ]
-```
-
-**Let-In Expressions:**
+**Let-in for derived values** (see the `syncthingPeers` pattern in `configuration.nix`):
 ```nix
 let
-  unstable = import <nixos-unstable> { config = { allowUnfree = true; }; };
+  peers = { laptop = "DEVICE-ID"; };
+  peerNames = builtins.attrNames peers;
 in
-[ unstable.package ]
+{ ... }
 ```
 
-**Function Imports:**
+**Deriving an attrset from another:**
 ```nix
-{ config, pkgs, ... }:  # Function that receives config and pkgs
+devices = builtins.mapAttrs (_name: id: { inherit id; }) peers;
 ```
+
+**List concatenation:** `[ a b ] ++ [ c ]` — note that NixOS *merges* list-typed options
+across modules, which is why `services.syncthing.openDefaultPorts` can add firewall ports
+alongside an explicit `networking.firewall.allowedTCPPorts = [ ]`.
 
 ---
 
-## Vim Configuration
+## Editor Configuration
 
-### Plugin Management
+### Neovim (primary)
 
-**Install/Update Plugins:**
+**Plugin manager:** lazy.nvim (auto-installs on first launch). `:Lazy` opens the UI;
+`:Lazy restore` pins back to the lockfile, `:Lazy sync` installs/updates.
+
+**LSP:** native, configured with the modern `vim.lsp.config()` / `vim.lsp.enable()` API in
+`sources/nvim/lua/plugins/init.lua`. Servers enabled: **pyright**, **ts_ls**, **lua_ls**.
+Rust is handled separately by **rustaceanvim**, which manages rust-analyzer itself — do
+not also declare it via lspconfig.
+
+Shared diagnostics config and the on-attach keymaps live in
+`sources/nvim/lua/config/lsp.lua`.
+
+**Formatting** — conform.nvim:
+
+| Filetype | Formatter |
+|---|---|
+| python | `ruff_format`, `ruff_fix` |
+| rust | `rustfmt` |
+| ts/tsx/js/jsx/json/yaml/html/css | `prettier` |
+| lua | `stylua` |
+
+**Linting** — nvim-lint: `ruff` (python), `eslint` (ts/tsx/js/jsx), triggered on
+`BufWritePost`, `BufReadPost`, `InsertLeave`.
+
+**Notable plugins:** telescope (+fzf-native), yazi.nvim (file manager), aerial.nvim (code
+outline), gitsigns, treesitter, nvim-cmp (+LuaSnip), neotest (+neotest-python), lualine,
+which-key, Comment.nvim, nvim-surround, fidget, render-markdown, rainbow-delimiters,
+gruvbox.
+
+**Keymaps** (leader = `\`):
+
+| Key | Action |
+|---|---|
+| `\f` / `\F` | Telescope git files / all files |
+| `\g` | Live grep |
+| `;` | Buffers |
+| `\n` | Open yazi at current file |
+| `\s` | Toggle code outline (aerial) |
+| `\b` / `\r` / `\R` / `\a` / `K` | Definition / references / rename / code action / hover |
+| `gD` / `gi` / `\D` / `\k` | Declaration / implementation / type definition / signature help |
+| `\tn` / `\tf` / `\ts` / `\tl` | neotest: nearest / file / suite / last |
+| `\th` / `\tv` | Open terminal in horizontal / vertical split |
+| `\hs` / `\hu` / `\hp` / `\hb` | Gitsigns: stage / undo / preview hunk, blame line |
+| `\w{h,v,e,l,r}` | Window sizing (also mapped in terminal mode) |
+| `\z` | Toggle zellij pane fullscreen from inside nvim |
+| `\cp` | Copy relative file path to clipboard |
+| `\x` | Insert `pudb` breakpoint (Python buffers only, set in `autocmds.lua`) |
+| `Ctrl+H/J/K/L` | Navigate splits (zellij-aware) |
+
+### Vim (fallback)
+
+`sources/vimrc` is kept working as a fallback: vim-plug, **ALE** for linting/fixing,
+fugitive + gitgutter, FZF, Tagbar, vim-test, and GitHub Copilot (`:Copilot setup`,
+requires Node.js). Same leader (`\`) and broadly parallel keybindings.
+
 ```vim
-:PlugInstall    " Install missing plugins
-:PlugUpdate     " Update all plugins
-:PlugClean      " Remove unused plugins
-:PlugStatus     " Check plugin status
+:PlugInstall  :PlugUpdate  :PlugClean  :ALEInfo
 ```
 
-### Language Server Setup
+### Adding a Language
 
-**Python:**
-- Linters: ruff, pyright (auto-configured via ALE)
-- Formatters: ruff, ruff_format
-- Auto-fix on save: enabled
-- Debugger: pudb (insert with `\x`)
-
-**Rust:**
-- Linter: rust-analyzer
-- Formatter: rustfmt (auto-save enabled via `g:rustfmt_autosave`)
-- Workspace-wide checks enabled
-
-**TypeScript:**
-- Linters: tsserver, eslint
-- Formatters: prettier, eslint
-
-### Adding New Language Support
-
-1. **Add vim plugin** to `sources/vimrc` in the plug#begin() section
-2. **Configure ALE linters** in the `g:ale_linters` dictionary
-3. **Configure ALE fixers** in the `g:ale_fixers` dictionary
-4. **Add language-specific settings** in the language-specific settings section
-5. **Ensure required LSP/linter packages** are installed in `configuration.nix`
+1. Install the server/linter/formatter in `configuration.nix`
+2. **Neovim:** add `vim.lsp.config("<server>", {...})` and append the server to the
+   `vim.lsp.enable` loop in `plugins/init.lua`; add entries to `formatters_by_ft` /
+   `linters_by_ft`
+3. **Vim:** add to `g:ale_linters` and `g:ale_fixers` in `sources/vimrc`
 
 ---
 
@@ -359,37 +417,39 @@ in
 
 **Pattern:** `<type>: <description>`
 
-**Types:**
-- `feat:` - New features or functionality
-- `fix:` - Bug fixes
-- `chore:` - Maintenance tasks (updates, cleanup)
-- `docs:` - Documentation changes
-- `refactor:` - Code restructuring without behavior change
+`feat:` new functionality · `fix:` bug fix · `chore:` maintenance · `docs:` documentation ·
+`refactor:` restructuring without behavior change
 
 **Examples from history:**
 ```
 feat: add vim-test to vimrc
-chore: Add comment and documentation to vimrc
-feat: better ale search symbol
 feat: use uv as a python package manager
 chore: remove aider stuff
+fix: fix yazi following move to 26.05
+chore: upgrade NixOS 25.11 → 26.05
 ```
 
-### Branching Strategy
+### Branching
 
-- Main branch: `master` or `main`
-- Feature branches: Use descriptive names
-- PR workflow: Enabled (see PR #1 in history)
+Main branch is `master`. Use descriptive feature branch names; don't commit or push unless
+asked.
 
-### Git Workflow Tools
+### Tools
 
-**Built-in Aliases:**
-- `git tree` - Visual commit graph with colors and dates
+- `git tree` — visual commit graph with colors and dates (defined in `gitconfig.conf`)
+- Neovim: gitsigns (`]h`/`[h` to navigate hunks, `\hs`/`\hu`/`\hp`/`\hb`)
+- Vim: fugitive + gitgutter
 
-**Vim Integration:**
-- vim-fugitive: Full Git client inside Vim (`:Git`, `:Gblame`, etc.)
-- vim-gitgutter: Shows diff markers in sign column
-- Keybindings: `]h`/`[h` (navigate hunks), `\hs` (stage), `\hu` (undo), `\hp` (preview)
+### Recovering From a Bad Amend
+
+An accidental `git commit --amend` that should have been a new commit is recoverable while
+unpushed — the pre-amend commit is still in the reflog:
+
+```bash
+git reflog                    # find the pre-amend commit
+git reset --soft <pre-amend>  # restore HEAD, keep the delta staged
+git commit -m "..."           # commit it separately
+```
 
 ---
 
@@ -398,49 +458,40 @@ chore: remove aider stuff
 ### System Cleanup
 
 ```bash
-# Standard cleanup
-./cleanup.sh
+./cleanup.sh        # nix-collect-garbage --delete-older-than 15d
+./cleanup-hard.sh   # nix-collect-garbage -d  (use with caution)
+```
 
-# Aggressive cleanup (use with caution)
-./cleanup-hard.sh
+Note `boot.loader.systemd-boot.configurationLimit = 5` already caps boot entries.
+
+### Rollback
+
+```bash
+sudo nixos-rebuild switch --rollback --flake .#wiremind
+# or pick a previous generation in the boot menu
+
+git checkout HEAD~1 -- flake.lock && ./recrank.sh   # revert a bad input update
 ```
 
 ### SSH Key Setup
 
-After fresh install or key rotation:
-
 ```bash
-mkdir ~/.ssh
-cd ~/.ssh
-ssh-keygen -a 100 -t ed25519 -C "myemail@email.com"
-chmod -R 700 ~/.ssh
+mkdir -p ~/.ssh && chmod 700 ~/.ssh
+ssh-keygen -a 100 -t ed25519 -C "come.bertrand@protonmail.com"
 ```
 
-Then add public key to GitHub, GitLab, etc.
-
-### Home Manager Installation
-
-**First-time setup** (if not already installed):
-```bash
-sudo nix-channel --add https://github.com/nix-community/home-manager/archive/release-25.05.tar.gz home-manager
-sudo nix-channel --update
-```
-
-### Firefox Extensions
-
-**Recommended extensions** (manual installation):
-- Bitwarden (password manager)
-- Ghostery (privacy)
-- uBlock Origin (ad blocker)
+Then register the public key with GitHub/GitLab.
 
 ### Monitoring & Debugging
 
-**Tools available:**
-- `htop` - Process monitoring
-- `k9s` - Kubernetes cluster visualization
-- `visidata` - Data analysis in terminal
-- `nix-tree` - Explore package dependency trees
-- `kcachegrind` + `graphviz` - Profile visualization
+`htop`, `k9s`, `nix-tree`, `visidata`, `kcachegrind` + `graphviz`, `dmidecode`.
+
+```bash
+nix flake check                        # evaluate for errors
+systemctl status syncthing.service     # service state
+journalctl -u syncthing -e             # service logs
+:checkhealth / :LspInfo                # inside Neovim
+```
 
 ---
 
@@ -448,140 +499,122 @@ sudo nix-channel --update
 
 ### When Modifying Configuration
 
-1. **ALWAYS read files before editing**
-   - Use Read tool on configuration.nix, vimrc, or other files
-   - Understand current state before making changes
-
-2. **Preserve NixOS declarative patterns**
-   - Don't suggest imperative commands for package installation
-   - All changes should go through configuration.nix
-   - Use proper Nix syntax
-
-3. **Test before committing**
-   - Suggest running `./recrank.sh` to test changes
-   - Warn about potential breaking changes
-   - Check for syntax errors in Nix expressions
-
-4. **Follow existing conventions**
-   - Match indentation (2 spaces in .nix files, 4 spaces in .vim)
-   - Use same commenting style
-   - Follow commit message patterns
-
-5. **Be cautious with system-critical files**
-   - hardware-configuration.nix - Don't modify unless necessary
-   - Boot loader settings - Double-check before changing
-   - User accounts - Verify group memberships
+1. **Read files before editing.** Understand current state first.
+2. **Preserve declarative patterns.** Never suggest imperative package installs;
+   everything goes through `configuration.nix`.
+3. **`git add` new files** or the flake won't see them.
+4. **Verify before claiming success.** Prefer
+   `nix build .#nixosConfigurations.wiremind.config.system.build.toplevel --no-link`, which
+   needs no sudo, over asserting that a change "should work". `./recrank.sh` requires an
+   interactive sudo password and generally cannot be run unattended.
+5. **Follow existing conventions:** 2-space indent in `.nix`, inline comments explaining
+   *why*, grouped by functional area.
+6. **Be cautious with system-critical files:** `hardware-configuration.nix`, boot loader
+   settings, the pinned kernel, user groups.
 
 ### Understanding User Context
 
-**System Details:**
-- **Hostname:** wiremind
-- **User:** cbertrand
-- **Timezone:** Europe/Paris (CET/CEST)
-- **Locale:** en_US.UTF-8 with FR regional settings
-- **Window Manager:** i3 (manual start with `startdm`)
-- **Terminal:** URxvt (rxvt-unicode)
-- **Editor:** Vim (configured for Python/Rust/TS development)
+**System details:**
+- **Hostname:** wiremind · **User:** cbertrand (`users`, `wheel`, `networkmanager`, `docker`)
+- **Timezone:** Europe/Paris · **Locale:** en_US.UTF-8 with FR regional settings
+- **Window Manager:** i3 (manual start via `startdm`)
+- **Terminal:** kitty + zellij
+- **Editor:** Neovim primary, Vim fallback
 
-**Common Tasks:**
-- Python development (likely professional, uses pyright + ruff)
-- Kubernetes operations (kubectl, helm, k9s, telepresence)
-- AWS operations (awscli2)
-- Rust development (with clippy configured strictly)
-- Document preparation (LaTeX with scheme-full)
+**Common tasks:** Python development, Kubernetes operations, AWS, Rust development,
+LLM agent workflows.
 
 ### Code Style Preferences
 
-**Vim Configuration:**
-- Heavy inline documentation (see vimrc sections)
-- Organized into logical sections with headers
-- Descriptive comments for keybindings
-- Quick reference cards at end of file
-
-**Nix Configuration:**
-- Inline comments for non-obvious settings
-- Grouped by functional area
-- Explicit over implicit
-
-**Shell Scripts:**
-- Simple and direct
-- Minimal error handling (fail fast)
-- Verbose flags preferred (`--verbose`)
+- **Nix:** inline comments for non-obvious settings, grouped by functional area, explicit
+  over implicit
+- **Neovim Lua:** organized into `config/` and `plugins/`, section header comments
+- **Vim:** heavy inline documentation, logical sections, quick-reference cards
+- **Shell scripts:** `set -euo pipefail`, simple and direct, `--verbose` where useful
 
 ### Security Considerations
 
-1. **Permitted insecure packages** are intentional (nodejs-14 for legacy projects)
-2. **Docker access** granted to user (in docker group)
-3. **SSH agent** auto-starts in bashrc
-4. **GPG agent** configured for signing
-5. **Secrets management** via infisical CLI
+1. **Permitted insecure packages** are intentional (`nodejs-14` for legacy projects)
+2. **Docker access** granted to the user (docker group is root-equivalent)
+3. **SSH agent** auto-starts in `bashrc`; **GPG agent** configured for signing
+4. **Secrets** via `infisical`; never commit keys or tokens
+5. **Syncthing device IDs are NOT secrets** — they are public identifiers and belong in
+   the repo. API keys in `~/.config/syncthing/config.xml` are secret and stay out.
+6. **Syncthing web UI** is bound to localhost only; do not add 8384 to the firewall
 
 ### External Dependencies
 
-**Optional (work-only):**
-- `../nix-work` - Work-specific module (override `nix-work` input; repo ships stub)
+**Optional (work-only):** `../nix-work` — override the `nix-work` input; the repo ships a
+no-op stub, and `recrank.sh`/`upgrade.sh` auto-override when `../nix-work` exists.
 
-**Managed by flake inputs (no manual channels needed):**
-- nixpkgs 25.05 (stable)
-- nixpkgs-unstable (bleeding-edge packages)
-- home-manager release-25.05
+**Managed by flake inputs (no channels):** nixpkgs 26.05, nixpkgs-unstable,
+home-manager release-26.05, llm-agents, tam, zen-browser, firefox-addons.
 
-**When suggesting changes involving these:**
-- Mention the dependency clearly
-- Provide setup instructions if missing
-- Don't assume they exist
-
-### Performance Considerations
-
-- **nix-ld enabled** - Allows running pre-built executables
-- **ALE async linting** - Non-blocking, maintains editing responsiveness
-- **Persistent undo** - Undo files stored indefinitely, can accumulate over time
-- **Git configuration** - Optimized for performance, be aware of .gitignore patterns
+**Binary cache:** `cache.numtide.com` is configured as an extra substituter for
+llm-agents packages.
 
 ### Common Pitfalls to Avoid
 
-1. **DON'T forget `sudo` with nix-channel** - User-level channel commands won't work
-2. **DON'T use -uall flag with git status** - Can cause memory issues on large repos
-3. **DON'T modify hardware-configuration.nix** - Auto-generated, regenerate if needed
-4. **DON'T use `--no-edit` with git rebase** - Not a valid option for git rebase
-5. **DON'T use interactive flags** (`-i`) with git commands in automation
+1. **DON'T forget to `git add` new files** — flakes only see git-tracked files. This is the
+   single most common source of confusing errors in this repo.
+2. **DON'T suggest `nix-channel`** — this repo is flake-based; channels do nothing here.
+3. **DON'T assume `~/.local/bin` is on PATH in i3 keybindings.** It is set by `path.sh` for
+   shells, but i3 does not inherit it — bindings need full paths like
+   `~/.local/bin/screenz`. Nix-managed binaries in
+   `/etc/profiles/per-user/cbertrand/bin/` are fine unqualified.
+4. **DON'T bump `system.stateVersion`** — it is a first-install marker.
+5. **DON'T edit `hardware-configuration.nix`** — auto-generated and machine-specific.
+6. **DON'T use `-uall` with `git status`** — can exhaust memory on large repos.
+7. **DON'T pair Syncthing devices in the web UI** — `overrideDevices = true` wipes them on
+   rebuild; edit `syncthingPeers` instead.
+8. **DON'T use interactive flags** (`-i`) with git commands; they are unsupported here.
 
 ### Helpful Patterns
 
-**Adding a Vim Plugin:**
-```vim
-" In sources/vimrc, Section 9
-Plug 'author/plugin-name'  " Description
-
-" Then configure in Section 11
-let g:plugin_setting = value
-```
-
-**Adding a System Package:**
+**Adding a system package:**
 ```nix
-# In configuration.nix, environment.systemPackages
+# configuration.nix → environment.systemPackages
 environment.systemPackages = with pkgs; [
   existing-package
   new-package  # Brief description
 ];
 ```
 
-**Adding a User Package:**
+**Adding a user package:**
 ```nix
-# In configuration.nix, users.users.cbertrand.packages
+# configuration.nix → users.users.cbertrand.packages
 packages = with pkgs; [
   existing-package
   new-package  # Brief description
 ];
 ```
 
+**Adding a Neovim plugin:**
+```lua
+-- sources/nvim/lua/plugins/init.lua — add to the returned table
+{
+  "author/plugin-name",
+  config = function()
+    require("plugin-name").setup({})
+  end,
+},
+```
+
+**Adding a Vim plugin:**
+```vim
+" sources/vimrc, Section 9
+Plug 'author/plugin-name'  " Description
+" Then configure in Section 11
+let g:plugin_setting = value
+```
+
 ### Response Format Preferences
 
-- **Be concise but complete**
-- **Reference files clearly** - Mention specific configuration sections or settings by name
-- **Provide commands ready to run** (no placeholders like `<path>` if actual path is known)
-- **Explain NixOS-specific concepts** (declarative, channels, generations)
-- **Test instructions** before suggesting complex changes
+- Be concise but complete
+- Reference files and options by name (`configuration.nix:407`, `services.syncthing`)
+- Provide ready-to-run commands with real paths, not placeholders
+- Explain NixOS-specific concepts (declarative, flakes, generations, closures)
+- State what was actually verified versus what is expected
 
 ---
 
@@ -590,51 +623,67 @@ packages = with pkgs; [
 ### Essential Commands
 
 | Command | Purpose |
-|---------|---------|
-| `./recrank.sh` | Rebuild and switch NixOS config |
-| `./upgrade.sh` | Upgrade all packages |
-| `sudo nixos-rebuild switch` | Apply config (manual) |
-| `sudo nix-channel --update` | Update channels |
+|---|---|
+| `./recrank.sh` | Rebuild and switch (needs interactive sudo) |
+| `./upgrade.sh` | `nix flake update` + rebuild |
+| `nix flake update` | Update inputs only |
+| `nix flake check` | Evaluate for errors |
+| `nix flake show` / `metadata` | Inspect outputs / pinned inputs |
+| `nix build .#nixosConfigurations.wiremind.config.system.build.toplevel --no-link` | Build without switching |
+| `sudo nixos-rebuild switch --flake .#wiremind` | Manual rebuild |
+| `./cleanup.sh` / `./cleanup-hard.sh` | Garbage collection |
+| `startdm` | Start X11/i3 (**required**) |
 | `screenz` | Configure monitors |
-| `startdm` | Start X11/i3 |
 | `switchkb` | Toggle US/FR keyboard |
-| `setexclude` | Setup git local excludes |
+| `nixinit <python\|rust\|node>` | Scaffold project `.envrc` + `shell.nix` |
+| `syncthing --home=$HOME/.config/syncthing device-id` | Print this machine's Syncthing ID |
 
 ### Key File Locations
 
 | File | Purpose |
-|------|---------|
-| `/home/user/dotfiles/configuration.nix` | Main system config |
-| `/home/user/dotfiles/sources/vimrc` | Vim configuration |
-| `/home/user/dotfiles/sources/bashrc.sh` | Bash interactive config |
-| `/home/user/dotfiles/sources/i3config.conf` | i3 window manager |
-| `~/.config/git/config` | Git user config (symlink) |
-| `~/.vimrc` | Vim config (symlink) |
+|---|---|
+| `/home/cbertrand/dotfiles/flake.nix` | Flake inputs & outputs |
+| `/home/cbertrand/dotfiles/configuration.nix` | Main system config |
+| `/home/cbertrand/dotfiles/sources/nvim/` | Neovim config (primary editor) |
+| `/home/cbertrand/dotfiles/sources/vimrc` | Vim config (fallback) |
+| `/home/cbertrand/dotfiles/sources/i3config.conf` | i3 window manager |
+| `~/.config/nvim` | Neovim config (symlink) |
+| `~/.config/git/config` | Git config (symlink) |
+| `~/.config/syncthing/config.xml` | Syncthing state — contains a secret API key |
 | `~/.local/bin/*` | Custom scripts (symlinked) |
+| `~/.local/tmp` | `TMPDIR` |
 
 ### Important URLs
 
 - NixOS Manual: https://nixos.org/manual/nixos/stable/
+- NixOS option search: https://search.nixos.org/options
 - Home Manager: https://github.com/nix-community/home-manager
-- Package Upgrades: https://superuser.com/questions/1604694/how-to-update-every-package-on-nixos
-- NixOS Version Upgrade: https://nixos.org/manual/nixos/stable/index.html#sec-upgrading
+- Home Manager options: https://nix-community.github.io/home-manager/options.xhtml
+- NixOS version upgrade: https://nixos.org/manual/nixos/stable/index.html#sec-upgrading
+- Syncthing ignore syntax: https://docs.syncthing.net/users/ignoring.html
+- lazy.nvim: https://github.com/folke/lazy.nvim
 
 ---
 
 ## Version History
 
 - **2026-01-23:** Initial CLAUDE.md creation
+- **2026-08-03:** Rewritten for accuracy — flakes replace channels throughout, Neovim
+  documented as the primary editor, kitty replaces URxvt, Syncthing documented, removed
+  stale references (`setexclude`, `xresources`, `rxvt-resize-font`, LaTeX, Home Manager
+  channel install, manual Firefox extensions), corrected `k9` description
 
 ---
 
 ## Notes for Future Updates
 
 When updating this document:
-1. Update "Last Updated" date at top
-2. Verify NixOS version and state version
-3. Verify external URLs are still valid
-4. Test all command examples in a safe environment
-5. Keep descriptions focused on purpose rather than specific implementation details
+1. Update "Last Updated" at the top and add a Version History entry
+2. Verify the NixOS version against `flake.nix`, not memory
+3. **Re-check claims against the files** — the previous revision drifted badly by
+   describing intent rather than the current state. Grep before asserting.
+4. Verify external URLs still resolve
+5. Keep this document in sync with `../CLAUDE.md` and `../README.md`
 
 ---
 

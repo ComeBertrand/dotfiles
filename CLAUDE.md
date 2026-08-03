@@ -12,11 +12,16 @@
 nix flake update                    # Update flake inputs only
 sudo nixos-rebuild switch --flake .#wiremind  # Manual flake rebuild
 
+# Verify a change builds WITHOUT switching (no sudo needed)
+nix build .#nixosConfigurations.wiremind.config.system.build.toplevel --no-link
+
 # Utility scripts
 screenz                             # Configure monitors
 startdm                             # Start X11/i3 (required - autorun disabled)
 switchkb                            # Toggle US/FR keyboard
 nixinit python                      # Scaffold .envrc + shell.nix for a project
+dcs                                 # Docker Compose services helper
+k9                                  # Pick a process with fzf and kill it
 ```
 
 ---
@@ -85,6 +90,30 @@ Open Vim and run: `:PlugInstall`
 
 Open Neovim - lazy.nvim will auto-install on startup.
 
+### Pair a Syncthing Machine
+
+Device IDs go in the `syncthingPeers` attrset in the `let` block at the top of
+`configuration.nix` — the **only** place to edit. Devices and both folders' share
+lists derive from it.
+
+```nix
+syncthingPeers = {
+  laptop = "AAAAAAA-BBBBBBB-...";  # the OTHER machine's ID
+};
+```
+
+```bash
+# Print a machine's own ID (2.x needs --home; device-id is a subcommand):
+syncthing --home=$HOME/.config/syncthing device-id
+```
+
+Then `./recrank.sh` on both ends. Folder IDs (`documents`, `workspace`) must match
+across machines; local paths may differ.
+
+`overrideDevices`/`overrideFolders` are `true`, so **anything added in the web UI
+(localhost:8384) is deleted on the next rebuild** — pair in the repo, not the GUI.
+This machine's own ID is recorded as a comment beside `syncthingPeers`.
+
 ### Configure ALE for New Language (Vim)
 
 ```vim
@@ -100,15 +129,27 @@ let g:ale_fixers = {
 
 ### Configure LSP for New Language (Neovim)
 
+Uses the native `vim.lsp` API (Neovim 0.11+), not `lspconfig.setup()`:
+
 ```lua
 -- In sources/nvim/lua/plugins/init.lua - in the nvim-lspconfig config
-lspconfig.mylang_ls.setup({
-  on_attach = on_attach,
-  capabilities = capabilities,
+vim.lsp.config("mylang_ls", {
+  settings = { ... },
 })
+
+-- Then add it to the enable loop in the same file:
+for _, server in ipairs({ "pyright", "ts_ls", "lua_ls", "mylang_ls" }) do
+  vim.lsp.enable(server)
+end
 ```
 
-Install LSP server/linter/formatter in `configuration.nix` packages.
+Shared diagnostics + on-attach keymaps live in `sources/nvim/lua/config/lsp.lua`.
+
+Rust is deliberately absent from that list: **rustaceanvim** manages rust-analyzer
+itself, so don't also declare it here.
+
+Formatters go in conform's `formatters_by_ft`, linters in nvim-lint's `linters_by_ft`.
+Install the LSP server/linter/formatter in `configuration.nix` packages.
 
 ---
 
@@ -133,19 +174,25 @@ Real examples from this repo:
 
 ## Critical Rules (DON'T Skip These!)
 
-1. **Commit `flake.lock`** - This file pins exact versions for reproducibility. Always commit changes to it.
+1. **`git add` new files** - Flakes only evaluate **git-tracked** files. An untracked new file is invisible to the build and produces confusing "file not found" errors. This is the most common source of trouble in this repo.
 
-2. **DON'T edit `hardware-configuration.nix`** - It's auto-generated. Regenerate with `nixos-generate-config` if needed.
+2. **Commit `flake.lock`** - This file pins exact versions for reproducibility. Always commit changes to it.
 
-3. **X11 won't autostart** - Run `startdm` manually to launch i3 window manager.
+3. **DON'T edit `hardware-configuration.nix`** - It's auto-generated and machine-specific (pins filesystem UUIDs and the LUKS device). Regenerate with `nixos-generate-config` if needed.
 
-4. **DON'T use `-uall` with git status** - Can cause memory issues on large repos.
+4. **DON'T bump `system.stateVersion`** - It records the release this machine was *first* installed with, not the current one.
 
-5. **Read files before editing** - Always check current state with Read tool before making changes.
+5. **X11 won't autostart** - Run `startdm` manually to launch i3 window manager.
 
-6. **Test before committing** - Run `./recrank.sh` to verify NixOS config syntax.
+6. **DON'T use `-uall` with git status** - Can cause memory issues on large repos.
 
-7. **All changes are declarative** - Don't suggest imperative package installs. Everything goes through `configuration.nix`.
+7. **Read files before editing** - Always check current state with Read tool before making changes.
+
+8. **Test before committing** - `./recrank.sh` needs an interactive sudo password. To verify unattended, use `nix build .#nixosConfigurations.wiremind.config.system.build.toplevel --no-link`.
+
+9. **All changes are declarative** - Don't suggest imperative package installs. Everything goes through `configuration.nix`.
+
+10. **`~/.local/bin` is NOT on PATH in i3 keybindings** - Bindings in `sources/i3config.conf` need full paths (`~/.local/bin/screenz`). Nix-managed binaries are fine unqualified.
 
 ---
 
@@ -156,35 +203,58 @@ dotfiles/
 ├── flake.nix                  # Flake definition (inputs & outputs)
 ├── flake.lock                 # Pinned dependency versions (COMMIT THIS)
 ├── configuration.nix          # Main NixOS config (EDIT THIS)
-├── hardware-configuration.nix # Auto-generated (DON'T EDIT)
+├── hardware-configuration.nix # Auto-generated, machine-specific (DON'T EDIT)
+├── gpu.nix                    # NVIDIA/Intel hybrid — DISABLED (hardware defect)
 ├── recrank.sh                 # Rebuild script (flake-based)
 ├── upgrade.sh                 # Update script (updates flake.lock)
+├── cleanup.sh / cleanup-hard.sh # Garbage collection
 ├── nix-work/                  # Optional work module stub (override input)
+├── docs/CLAUDE_COMPREHENSIVE.md # Full system documentation
 │
 └── sources/                   # All dotfiles live here
-    ├── vimrc                  # Vim config (fallback editor)
+    ├── vimrc                  # Vim config (fallback editor, 15 sections)
     ├── nvim/                  # Neovim config (primary editor)
     │   ├── init.lua           # Entry point
     │   └── lua/
     │       ├── config/        # Core settings
     │       │   ├── options.lua
     │       │   ├── keymaps.lua
-    │       │   └── autocmds.lua
-    │       └── plugins/       # Plugin configs (lazy.nvim)
+    │       │   ├── autocmds.lua   # incl. Python \x pudb mapping
+    │       │   └── lsp.lua        # Diagnostics + on-attach LSP keymaps
+    │       └── plugins/       # Plugin specs & config (lazy.nvim)
     │           └── init.lua
     ├── bashrc.sh              # Bash interactive shell
     ├── bash_profile.sh        # Login shell init
+    ├── bash_prompt.sh         # Prompt
+    ├── path.sh                # PATH (~/.local/bin) + TMPDIR
     ├── aliases.sh             # Shell aliases
+    ├── direnvrc.sh            # direnv functions
+    ├── direnv.toml            # direnv config (auto-allow Workspace)
     ├── gitconfig.conf         # Git config
+    ├── gpg-agent.conf         # GPG agent
     ├── i3config.conf          # i3 window manager
+    ├── kitty.conf             # Terminal
+    ├── rofi-config.rasi       # Application launcher
     ├── zellij.kdl             # Zellij config
+    ├── zellij-layout.kdl      # Default layout
+    ├── zellij-layout-dev.kdl  # Dev layout (nvim + two terminals)
+    ├── yazi.toml              # File manager
+    ├── yazi_keymap.toml       # File manager keymaps
+    ├── tam-config.toml        # Terminal agent multiplexer
+    ├── claude-settings.json   # Claude Code user settings
+    ├── zen.nix                # Zen browser HM module (declarative extensions)
     ├── config.nix             # User nixpkgs config
     │
-    └── scripts/               # Custom utilities
+    └── scripts/               # Custom utilities → ~/.local/bin
         ├── screenz            # Monitor configuration
         ├── startdm            # Start display manager
         ├── switchkb           # Keyboard layout toggle
-        └── nixinit             # Project scaffolding (envrc + shell.nix + git excludes)
+        ├── nixinit            # Project scaffolding (envrc + shell.nix + git excludes)
+        ├── dcs                # Docker Compose services helper
+        ├── k9                 # Pick a process with fzf and kill it
+        ├── dev-open           # Open kitty + zellij session for a directory
+        ├── tam-open           # Pick a project via rofi, launch dev session
+        └── morning            # Startup housekeeping (systemd user service)
 ```
 
 ---
@@ -196,10 +266,14 @@ dotfiles/
 - **NixOS:** 26.05 (+ unstable flake input for bleeding-edge)
 - **Config Style:** Nix Flakes (reproducible builds via flake.lock)
 - **Window Manager:** i3
-- **Editor (primary):** Neovim with native LSP, Treesitter, lazy.nvim
+- **Terminal:** kitty + zellij
+- **Editor (primary):** Neovim with native LSP (pyright, ts_ls, lua_ls; Rust via rustaceanvim), Treesitter, lazy.nvim
 - **Editor (fallback):** Vim with ALE (Python: ruff+pyright, Rust: rust-analyzer, TS: tsserver+eslint)
 - **Shell:** Bash with direnv
+- **Browser:** Zen (declarative extensions via `sources/zen.nix`)
+- **File sync:** Syncthing (`documents`, `workspace` folders)
 - **Timezone:** Europe/Paris
+- **State version:** 23.05 — a first-install marker, do NOT bump it
 
 ---
 
@@ -224,11 +298,14 @@ All dependencies are pinned in `flake.lock` for reproducibility.
 ```lua
 -- Navigation
 \f              Telescope git files
+\F              Telescope all files
 ;               Telescope buffers
 \g              Telescope live grep
-\n              Oil file explorer
+\n              Open yazi at current file
 \s              Aerial code outline
 Ctrl+H/J/K/L    Navigate splits (zellij-aware)
+\z              Toggle zellij pane fullscreen
+\w{h,v,e,l,r}   Window sizing (max height/width, equalize, shrink/grow)
 
 -- Code Intelligence (Native LSP)
 \b              Go to definition
@@ -236,6 +313,8 @@ Ctrl+H/J/K/L    Navigate splits (zellij-aware)
 \R              Rename symbol
 \a              Code actions
 K               Hover documentation
+gD / gi         Go to declaration / implementation
+\D / \k         Type definition / signature help
 ]d / [d         Next/prev diagnostic
 ]e / [e         Next/prev error
 
@@ -246,19 +325,28 @@ K               Hover documentation
 \hp             Preview hunk
 \hb             Blame line
 
--- Testing (vim-test)
+-- Testing (neotest)
 \tn             Run nearest test
 \tf             Run test file
 \ts             Run test suite
 \tl             Run last test
 
+-- Terminals
+\th / \tv       Open terminal in horizontal / vertical split
+
 -- Python specific
 \x              Insert pudb breakpoint
 
+-- Misc
+\cp             Copy relative file path to clipboard
+\<space>        Clear search highlighting
+
 -- Plugin management
-:Lazy           Open lazy.nvim UI
-:Mason          Open Mason LSP installer (if needed)
+:Lazy           Open lazy.nvim UI (:Lazy restore / sync / clean)
 ```
+
+LSP servers are installed from `configuration.nix`, **not** Mason — Mason is not
+part of this config.
 
 ---
 
@@ -354,7 +442,7 @@ nix flake check
 
 **Rollback to previous generation:**
 ```bash
-sudo nixos-rebuild --rollback --flake .#wiremind
+sudo nixos-rebuild switch --rollback --flake .#wiremind
 # OR use boot menu to select previous generation
 ```
 
@@ -372,10 +460,17 @@ git checkout HEAD~1 -- flake.lock
 ```
 
 **Neovim LSP not working:**
-- Check LSP server installed in configuration.nix
+- Check LSP server installed in configuration.nix (there is no Mason in this config)
+- Verify the server is in the `vim.lsp.enable` loop in `sources/nvim/lua/plugins/init.lua`
 - Run `:LspInfo` to see active LSP clients
 - Run `:checkhealth` for diagnostics
 - Check `:messages` for errors
+
+**Syncthing not syncing:**
+- `systemctl status syncthing.service syncthing-init.service`
+- Confirm the peer's ID is in `syncthingPeers` — GUI-added devices are wiped on rebuild
+- Check the folder is not excluded by `ignorePatterns` (workspace ignores build dirs)
+- `journalctl -u syncthing -e`
 
 **Vim plugins broken:**
 ```vim
@@ -399,4 +494,4 @@ For comprehensive details, see:
 
 ---
 
-**Last Updated:** 2026-06-09
+**Last Updated:** 2026-08-03

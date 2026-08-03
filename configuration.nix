@@ -10,20 +10,30 @@ let
     sha256 = "194fgd421w2j77jbpnq994y2ma03qzdlz932cxfhfznrpw3mdjb9";
   };
 
-  # Syncthing peers — the ONLY place to edit when adding a machine.
-  # Device IDs are public (not secrets), so they belong in this repo.
+  # ── Syncthing ───────────────────────────────────────────────────────────
+  # Device IDs are public identifiers, not secrets, so they belong in this repo.
+  #
+  # THIS machine (wiremind) — give this to the other machine when pairing:
+  #   CYDUPOM-WGPKWZJ-B3A4ZU3-VNAUCE6-DAECQFY-GGF3WE3-T7YHW3H-7G6CTAJ
+  #
+  # Recorded here for reference only. Do NOT add it to syncthingPeers below:
+  # that attrset declares *remote* peers, and syncthing already knows itself as
+  # the local device — listing it would duplicate the local device entry.
+  #
+  # Re-read it at any time with (syncthing 2.x needs --home, or BOTH --config
+  # and --data; `device-id` is a subcommand, not a flag):
+  #   syncthing --home=/home/cbertrand/.config/syncthing device-id
   #
   # To pair a new machine:
-  #   1. On that machine, get its ID:  syncthing --device-id
-  #      (or web UI at localhost:8384 → Actions → Show ID)
-  #   2. Add it below, uncommented, then run ./recrank.sh
-  #   3. Do the mirror-image setup there, using THIS machine's ID:
-  #      syncthing --device-id --config=/home/cbertrand/.config/syncthing
+  #   1. Get that machine's ID the same way (or web UI → Actions → Show ID).
+  #   2. Add it to syncthingPeers below, uncommented, then run ./recrank.sh
+  #   3. Do the mirror-image setup there, using this machine's ID above.
   #   4. Folder IDs ("documents"/"workspace") must match on both ends;
   #      the local paths may differ.
   #
-  # While this is empty the folders are declared but shared with nobody —
-  # syncthing runs, generates this machine's ID, and waits.
+  # syncthingPeers is the ONLY place to edit when adding a machine — the
+  # devices attrset and both folders' share lists are derived from it.
+  # While it is empty the folders are declared but shared with nobody.
   # NOTE: overrideDevices = true below means pairing via the web UI gets
   # reverted on the next rebuild. Pairing happens here, not in the GUI.
   syncthingPeers = {
