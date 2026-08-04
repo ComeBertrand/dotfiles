@@ -165,9 +165,20 @@ Add further aliases in the same block.
 ## Custom Scripts
 
 ### screenz
-**Purpose:** Auto-configure monitor layout using xrandr
-**Usage:** Run when monitors change
+**Purpose:** Auto-configure monitor layout using xrandr, then hand i3 workspaces to
+the screens at each end (right-hand screen takes 3-6, left-hand takes 2 and 7)
+**Usage:** Run when monitors change — bound to `$mod+Shift+d` in `i3config.conf`
 **Location:** Sources from `~/.local/bin/screenz`
+
+Connectors are **discovered at runtime**, never hardcoded: the internal panel is
+whichever `eDP*`/`LVDS*` output is connected and every other connected output is an
+external. The one machine-specific knob is `LEFT_OUTPUTS` at the top of the script,
+naming the externals that belong left of the laptop panel — everything else goes to
+its right. On this machine that is `HDMI-1` (left) / `DP-1` (right); if a layout comes
+out mirrored, swap those names rather than touching the logic.
+
+Outputs that are still active but no longer plugged in get `--off` automatically, so
+the same script handles docking and undocking.
 
 ### startdm
 **Purpose:** Start X11 display manager and i3

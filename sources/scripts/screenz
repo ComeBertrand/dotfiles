@@ -1,72 +1,101 @@
 #!/usr/bin/env bash
+#
+# Lay the connected monitors out left-to-right, then hand the i3 workspaces to
+# the screens at each end.
+#
+# No connector name is hardcoded, so this survives a change of machine: the
+# internal panel is whichever eDP*/LVDS* output is connected and every other
+# connected output is an external. The one machine-specific knob is
+# LEFT_OUTPUTS, which decides the side of the laptop panel an external sits on.
 
-geti3Commands() {
-    commands='workspace "6"'
-    commands+=";move workspace to output $1"
-    commands+=';workspace "5"'
-    commands+=";move workspace to output $1"
-    commands+=';workspace "4"'
-    commands+=";move workspace to output $1"
-    commands+=';workspace "3"'
-    commands+=";move workspace to output $1"
-    commands+=';workspace "7"'
-    commands+=";move workspace to output $2"
-    commands+=';workspace "2"'
-    commands+=";move workspace to output $2"
-    echo $commands
+# Externals named here go left of the internal panel, everything else goes to
+# its right. On this machine the left monitor is cabled to HDMI and the right
+# one to DisplayPort; swap these names if the layout comes out mirrored.
+LEFT_OUTPUTS="HDMI-1 HDMI-2"
+
+# Workspaces handed to the leftmost and rightmost screens. Anything unlisted
+# (1, 8, 9, 10) stays wherever i3 already has it.
+LEFT_WORKSPACES="7 2"
+RIGHT_WORKSPACES="6 5 4 3"
+
+# Is the needle ($2) one of the whitespace-separated words in the list ($1)?
+contains() {
+    local word
+    for word in $1; do
+        [[ $word == "$2" ]] && return 0
+    done
+    return 1
 }
 
-getConnectedOutput() {
-    xrandr --current | grep " connected" | grep -v eDP-1 | awk '{print $1;}' | grep $1
-}
+connectedOutputs=$(xrandr --query | awk '/ connected/ {print $1}')
+activeOutputs=$(xrandr --listactivemonitors | awk 'NR > 1 {print $NF}')
 
-getListedMonitor() {
-    xrandr --listactivemonitors | grep -v eDP-1 | grep -v Monitors | awk '{print $2;}' | tr -d '+' | grep $1
-}
+internal=
+leftExternals=()
+rightExternals=()
+for output in $connectedOutputs; do
+    case $output in
+        eDP*|LVDS*)
+            internal=$output
+            ;;
+        *)
+            if contains "$LEFT_OUTPUTS" "$output"; then
+                leftExternals+=("$output")
+            else
+                rightExternals+=("$output")
+            fi
+            ;;
+    esac
+done
 
-# Fetch the connected outputs
-dp3Connection=$(getConnectedOutput DP-3)
-dp4Connection=$(getConnectedOutput DP-4)
-# Fetch the current active monitors
-dp3Monitor=$(getListedMonitor DP-3)
-dp4Monitor=$(getListedMonitor DP-4)
-
-if [[ ! $dp3Connection -eq '' ]] && [[ ! $dp4Connection -eq '' ]]
-then
-    xrandr --output eDP-1 --auto --output $dp3Connection --auto --left-of eDP-1 --output $dp4Connection --auto --right-of eDP-1
-    i3Commands=$(geti3Commands $dp4Connection $dp3Connection)
-elif [[ ! $dp3Connection -eq '' ]]
-then
-    if [[ ! $dp4Monitor -eq '' ]]
-    then
-        xrandr --output eDP-1 --auto --output $dp3Connection --auto --left-of eDP-1 --output $dp4Monitor --off
-    else
-        xrandr --output eDP-1 --auto --output $dp3Connection --auto --left-of eDP-1
-    fi
-    i3Commands=$(geti3Commands eDP-1 $dp3Connection)
-elif [[ ! $dp4Connection -eq '' ]]
-then
-    if [[ ! $dp3Monitor -eq '' ]]
-    then
-        xrandr --output eDP-1 --auto --output $dp4Connection --auto --right-of eDP-1 --output $dp3Monitor --off
-    else
-        xrandr --output eDP-1 --auto --output $dp4Connection --auto --right-of eDP-1
-    fi
-    i3Commands=$(geti3Commands $dp4Connection eDP-1)
+# The final left-to-right order. Without an internal panel (docked lid-closed,
+# or a desktop) the externals simply chain among themselves.
+if [[ -n $internal ]]; then
+    layout=("${leftExternals[@]}" "$internal" "${rightExternals[@]}")
 else
-    if [[ ! $dp3Monitor -eq '' ]] && [[ ! $dp4Monitor -eq '' ]]
-    then
-        xrandr --output eDP-1 --auto --output $dp3Monitor --off --output $dp4Monitor --off
-    elif [[ ! $dp3Monitor -eq '' ]]
-    then
-        xrandr --output eDP-1 --auto --output $dp3Monitor --off
-    elif [[ ! $dp4Monitor -eq '' ]]
-    then
-        xrandr --output eDP-1 --auto --output $dp4Monitor --off
-    else
-        xrandr --output eDP-1 --auto
-    fi
-    i3Commands=$(geti3Commands eDP-1 eDP-1)
+    layout=("${leftExternals[@]}" "${rightExternals[@]}")
 fi
 
-i3-msg $i3Commands &>/dev/null &
+if [[ ${#layout[@]} -eq 0 ]]; then
+    echo "screenz: no connected outputs" >&2
+    exit 1
+fi
+
+# Enable everything connected, each output placed right of its predecessor. The
+# laptop panel stays primary when it is there, otherwise the leftmost screen is.
+primary=${internal:-${layout[0]}}
+xrandrArgs=()
+previous=
+for output in "${layout[@]}"; do
+    xrandrArgs+=(--output "$output" --auto)
+    [[ $output == "$primary" ]] && xrandrArgs+=(--primary)
+    [[ -n $previous ]] && xrandrArgs+=(--right-of "$previous")
+    previous=$output
+done
+
+# Switch off screens that are still active but no longer plugged in.
+for output in $activeOutputs; do
+    contains "$connectedOutputs" "$output" || xrandrArgs+=(--output "$output" --off)
+done
+
+xrandr "${xrandrArgs[@]}"
+
+# Right-hand workspaces first so the run ends focused on workspace 2, as before.
+leftScreen=${layout[0]}
+rightScreen=${layout[-1]}
+
+i3Commands=()
+for workspace in $RIGHT_WORKSPACES; do
+    i3Commands+=("workspace \"$workspace\"" "move workspace to output $rightScreen")
+done
+for workspace in $LEFT_WORKSPACES; do
+    i3Commands+=("workspace \"$workspace\"" "move workspace to output $leftScreen")
+done
+
+# Backgrounded so the i3 binding returns at once; the pause lets i3 take in the
+# RandR change before it is asked to move workspaces onto the new outputs.
+(
+    sleep 0.5
+    IFS=';'
+    i3-msg "${i3Commands[*]}"
+) &>/dev/null &
