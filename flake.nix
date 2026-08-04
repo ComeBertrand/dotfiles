@@ -74,7 +74,7 @@
         inherit system;
 
         specialArgs = {
-          inherit pkgs-unstable llmPkgs tamPkg;
+          inherit inputs pkgs-unstable llmPkgs tamPkg;
         };
 
         modules = [

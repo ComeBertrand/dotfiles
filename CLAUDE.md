@@ -440,6 +440,27 @@ nix flake check
 # Shows where syntax/evaluation errors are
 ```
 
+**`file 'nixos-unstable' was not found in the Nix search path`:**
+
+A `nixinit`-generated `shell.nix` does `import <nixos-unstable> {}` (Rust projects
+take cargo/rustc/clippy from unstable), and direnv trips it on `cd`. There are no
+nix-channels here, so `nix.nixPath` in `configuration.nix` maps `nixos-unstable` to
+the flake's `nixpkgs-unstable` input. If the error is back, that list is the place to
+look — NixOS' defaults are `mkDefault`, so the whole list (`nixpkgs=flake:nixpkgs`
+included) has to be restated there, and dropping an entry breaks every `shell.nix`.
+The entry is the flakeref `flake:nixos-unstable` (resolved via `nix.registry`), never a
+raw store path, which would go stale on `nix flake update` and die at the next GC.
+
+**A `nix.nixPath` change does not reach running sessions.** `/etc/set-environment`
+exports `__NIXOS_SET_ENVIRONMENT_DONE=1` and `/etc/profile` only re-sources it when
+that guard is unset, so every child of a pre-rebuild i3/kitty/zellij inherits the old
+`NIX_PATH` — opening a new shell or pane is not enough. Log out of X and `startdm`
+again (zellij panes take their env from the server process, so kill those sessions
+too), or refresh one shell by hand:
+```bash
+export NIX_PATH="$(grep -m1 -oP '(?<=^export NIX_PATH=").*(?=")' /etc/set-environment)"
+```
+
 **Rollback to previous generation:**
 ```bash
 sudo nixos-rebuild switch --rollback --flake .#wiremind

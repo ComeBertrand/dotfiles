@@ -8,37 +8,28 @@
     [ (modulesPath + "/installer/scan/not-detected.nix")
     ];
 
-  boot.initrd.availableKernelModules = [ "xhci_pci" "thunderbolt" "vmd" "nvme" "usb_storage" "usbhid" "sd_mod" "rtsx_pci_sdmmc" ];
+  boot.initrd.availableKernelModules = [ "nvme" "xhci_pci" "thunderbolt" "usb_storage" "sd_mod" ];
   boot.initrd.kernelModules = [ ];
-  boot.kernelModules = [ "kvm-intel" ];
+  boot.kernelModules = [ "kvm-amd" ];
   boot.extraModulePackages = [ ];
 
   fileSystems."/" =
-    { device = "/dev/disk/by-uuid/102a3727-7841-4bd4-9ccc-29b4ab124e5e";
+    { device = "/dev/mapper/luks-7c7c80ec-320b-4893-ab24-b74ad94f5deb";
       fsType = "ext4";
     };
 
-  boot.initrd.luks.devices."luks-7d4afdb7-6bba-4271-8f07-85054fb1f072".device = "/dev/disk/by-uuid/7d4afdb7-6bba-4271-8f07-85054fb1f072";
+  boot.initrd.luks.devices."luks-7c7c80ec-320b-4893-ab24-b74ad94f5deb".device = "/dev/disk/by-uuid/7c7c80ec-320b-4893-ab24-b74ad94f5deb";
 
   fileSystems."/boot" =
-    { device = "/dev/disk/by-uuid/5732-C9D6";
+    { device = "/dev/disk/by-uuid/41E6-626C";
       fsType = "vfat";
+      options = [ "fmask=0077" "dmask=0077" ];
     };
 
   swapDevices =
-    [ { device = "/dev/disk/by-uuid/224caba0-fb06-4f1f-a1cd-1f067a4cbe42"; }
+    [ { device = "/dev/mapper/luks-df3f27e6-9fa6-4f8f-b109-64b9b9b5d419"; }
     ];
 
-  # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
-  # (the default) this is the recommended approach. When using systemd-networkd it's
-  # still possible to use this option, but it's recommended to use it in conjunction
-  # with explicit per-interface declarations with `networking.interfaces.<interface>.useDHCP`.
-  networking.useDHCP = lib.mkDefault true;
-  # networking.interfaces.enp0s13f0u2u1c2.useDHCP = lib.mkDefault true;
-  # networking.interfaces.enp0s20f0u1u1c2.useDHCP = lib.mkDefault true;
-  # networking.interfaces.wlp0s20f3.useDHCP = lib.mkDefault true;
-
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
-  powerManagement.cpuFreqGovernor = lib.mkDefault "powersave";
-  hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+  hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 }

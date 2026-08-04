@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running 'nixos-help').
 
-{ config, pkgs, pkgs-unstable, llmPkgs, tamPkg, ... }:
+{ config, lib, pkgs, inputs, pkgs-unstable, llmPkgs, tamPkg, ... }:
 
 let
   zellij-autolock = pkgs.fetchurl {
@@ -37,7 +37,7 @@ let
   # NOTE: overrideDevices = true below means pairing via the web UI gets
   # reverted on the next rebuild. Pairing happens here, not in the GUI.
   syncthingPeers = {
-    # laptop = "AAAAAAA-BBBBBBB-CCCCCCC-DDDDDDD-EEEEEEE-FFFFFFF-GGGGGGG-HHHHHHH";
+    old-laptop = "CYDUPOM-WGPKWZJ-B3A4ZU3-VNAUCE6-DAECQFY-GGF3WE3-T7YHW3H-7G6CTAJ";
   };
   syncthingPeerNames = builtins.attrNames syncthingPeers;
 in
@@ -60,10 +60,30 @@ in
   # Unpin once the 6.12 LTS line picks up the backport.
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
-  # Setup keyfile
-  boot.initrd.secrets = {
-    "/crypto_keyfile.bin" = null;
-  };
+  # Swap: nvme0n1p3, encrypted with a fresh random key on every boot.
+  #
+  # hardware-configuration.nix declares this partition as
+  # /dev/mapper/luks-df3f27e6-… but nixos-generate-config never emitted the
+  # matching boot.initrd.luks.devices entry, so nothing ever unlocked it. That
+  # mapper node never appeared and systemd waited out its full 90s
+  # DefaultDeviceTimeout — on every boot AND every nixos-rebuild switch — while
+  # leaving the machine with no swap at all.
+  #
+  # mkForce, not a plain definition: swapDevices is a list option, so a second
+  # definition would append and leave the broken entry in place.
+  #
+  # by-partuuid is required here, not by-uuid: randomEncryption overwrites the
+  # partition's LUKS header (and thus its UUID) on every boot, so a by-uuid link
+  # would vanish. This is upstream's own advice in nixos/modules/config/swap.nix.
+  #
+  # Consequence of the random key: hibernation is impossible, by design. Fine at
+  # 8.8G of swap against 58 GiB of RAM, where hibernation was never realistic.
+  swapDevices = lib.mkForce [
+    {
+      device = "/dev/disk/by-partuuid/66078ec4-f6d3-4069-a747-c107495f9f0f";
+      randomEncryption.enable = true;
+    }
+  ];
 
 
   networking.hostName = "wiremind"; # Define your hostname.
@@ -205,6 +225,8 @@ in
       kubectl  # Manage kubernetes cluster CLI
       kubernetes-helm  # Kubernetes package manager
       k9s  # Kubernetes cluster management
+      # The kubectl plugins mayo needs (kubelogin, kubectx/kubens,
+      # kubectl_view_secret) come from ~/nix-work, see wmdotfiles.
       xsel  # Allows clipboard copy/paste
       flameshot  # Screenshot tool
       pulseaudio  # Sound control
@@ -295,6 +317,9 @@ in
       ".path" = {
         source = ./sources/path.sh;
       };
+      ".exports" = {
+        source = ./sources/exports.sh;
+      };
       ".aliases" = {
         source = ./sources/aliases.sh;
       };
@@ -354,6 +379,8 @@ in
   environment.systemPackages = with pkgs; [
     python313
     pkgs-unstable.uv  # python package manager
+    # The PostgreSQL client (`psql`, `pg_config`) comes from ~/nix-work, see
+    # wmdotfiles — it is only needed for the work layer's mayo and ksql.
     (vim-full.override { python3 = pkgs.python313; })  # Keep vim as fallback
     neovim  # Modern editor with native LSP support
     telepresence2  # Allow direct connection to cluster
@@ -412,6 +439,27 @@ in
       xz
     ];
   };
+
+  # `<nixos-unstable>` for the non-flake shell.nix files nixinit generates
+  # (Rust projects pull cargo/rustc/clippy from unstable). There is no
+  # nix-channel on this machine, so point the angle-bracket lookup at the
+  # flake's own nixpkgs-unstable input: same tree, pinned by flake.lock.
+  # NixOS' own entries are `lib.mkDefault`, so any definition here replaces the
+  # whole list: `nixpkgs=flake:nixpkgs` and the channels dir must be restated,
+  # or `<nixpkgs>` breaks in every shell.nix.
+  #
+  # `flake:nixos-unstable` (indirection through nix.registry below), not a raw
+  # `${inputs.nixpkgs-unstable}` store path: the path changes on every
+  # `nix flake update`, so a shell that outlives a rebuild would keep pointing
+  # at the old one and break once cleanup.sh garbage-collects it. The flakeref
+  # is resolved at eval time against /etc/nix/registry.json, which every
+  # rebuild refreshes.
+  nix.nixPath = [
+    "nixpkgs=flake:nixpkgs"
+    "nixos-unstable=flake:nixos-unstable"
+    "/nix/var/nix/profiles/per-user/root/channels"
+  ];
+  nix.registry.nixos-unstable.flake = inputs.nixpkgs-unstable;
 
   # Numtide binary cache for llm-agents (pre-built packages)
   nix.settings = {
@@ -526,6 +574,6 @@ in
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "23.05"; # Did you read the comment?
+  system.stateVersion = "26.05"; # Did you read the comment?
 
 }
