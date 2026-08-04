@@ -263,6 +263,10 @@ in
       ".config/git/config" = {
         source = ./sources/gitconfig.conf;
       };
+      # Work identity, included by gitconfig.conf for gitlab.wiremind.io remotes
+      ".config/git/config-wiremind" = {
+        source = ./sources/gitconfig-wiremind.conf;
+      };
       # i3 configuration
       ".config/i3/config" = {
         source = ./sources/i3config.conf;
