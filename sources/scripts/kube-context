@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Publish the current kubectl context for the i3 status bar.
+#
+# i3status has no exec module, so the K8S block in sources/i3status.conf reads a
+# file instead. This service keeps that file fresh.
+#
+# `kubectl config current-context` only parses ~/.kube/config -- no cluster
+# round-trip -- so this costs ~60ms per tick.
+#
+# Only the context (cluster) name is published. Staging and prod share a cluster
+# here, so the context does not identify the environment; the namespace would.
+# Publishing that too would mean parsing `kubectl config view --minify`.
+
+set -uo pipefail
+
+state_dir="${XDG_CACHE_HOME:-$HOME/.cache}/i3status"
+ctx_file="$state_dir/kube-context"
+interval="${KUBE_CONTEXT_INTERVAL:-10}"
+
+mkdir -p "$state_dir"
+
+while true; do
+    ctx="$(kubectl config current-context 2>/dev/null)" || ctx=""
+    [ -n "$ctx" ] || ctx="-"
+
+    # Replace atomically so read_file never catches a half-written line.
+    printf '%s' "$ctx" >"$ctx_file.tmp" && mv -f "$ctx_file.tmp" "$ctx_file"
+
+    sleep "$interval"
+done

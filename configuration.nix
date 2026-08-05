@@ -271,6 +271,10 @@ in
       ".config/i3/config" = {
         source = ./sources/i3config.conf;
       };
+      # i3 status bar fields (CPU%, RAM%, thresholds)
+      ".config/i3status/config" = {
+        source = ./sources/i3status.conf;
+      };
       # Direnv functions (auto venv for python, ...)
       ".config/direnv/direnvrc" = {
         source = ./sources/direnvrc.sh;
@@ -366,6 +370,21 @@ in
       Service = {
         Type = "oneshot";
         ExecStart = "%h/.local/bin/morning";
+      };
+      Install.WantedBy = [ "default.target" ];
+    };
+    # Publishes the current kubectl context into ~/.cache/i3status for the
+    # status bar to read -- i3status has no exec module, so the K8S and PROD
+    # blocks in sources/i3status.conf consume files instead.
+    systemd.user.services.kube-context = {
+      Unit.Description = "Publish current kubectl context for the i3 status bar";
+      Service = {
+        Type = "simple";
+        ExecStart = "%h/.local/bin/kube-context";
+        # A user service gets a minimal PATH; the script needs both of these.
+        Environment = "PATH=${pkgs.kubectl}/bin:${pkgs.coreutils}/bin";
+        Restart = "always";
+        RestartSec = 5;
       };
       Install.WantedBy = [ "default.target" ];
     };
