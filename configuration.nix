@@ -45,6 +45,7 @@ in
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      ./gaming.nix
       # ./gpu.nix  # Disabled — GPU hardware defect (VBIOS unreadable, RmInitAdapter fails)
       # Work-specific module is injected via flake input (nix-work).
     ];
