@@ -232,6 +232,7 @@ in
       flameshot  # Screenshot tool
       pulseaudio  # Sound control
       pavucontrol  # Sound control
+      alsa-utils  # amixer -- needed by the micmute script to drive the mic LED
       google-chrome  # Secondary browser
       unzip  # Unzip files
       gnupg  # Handle PGP
@@ -371,6 +372,25 @@ in
       Service = {
         Type = "oneshot";
         ExecStart = "%h/.local/bin/morning";
+      };
+      Install.WantedBy = [ "default.target" ];
+    };
+    # The mic-mute LED follows an ALSA control (card 1 'Capture Switch') that
+    # PipeWire's UCM capture path never touches, and the codec powers up with it
+    # off -- so the light claims the mic is muted from every boot onward while
+    # the mic records fine. Sync it to PipeWire's real mute state at login. (No
+    # resume hook: this user manager has no suspend.target. If the codec resets
+    # across suspend, F4 now corrects the LED, since it drives both sides.)
+    systemd.user.services.micmute-sync = {
+      Unit = {
+        Description = "Sync the mic-mute LED to the real capture mute state";
+        After = [ "pipewire.service" ];
+      };
+      Service = {
+        Type = "oneshot";
+        ExecStart = "%h/.local/bin/micmute --sync";
+        # A user service gets a minimal PATH; the script needs all three.
+        Environment = "PATH=${pkgs.alsa-utils}/bin:${pkgs.pulseaudio}/bin:${pkgs.coreutils}/bin";
       };
       Install.WantedBy = [ "default.target" ];
     };

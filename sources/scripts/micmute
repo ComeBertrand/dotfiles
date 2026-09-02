@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# Toggle the default capture source's mute, keeping the mic-mute LED honest.
+#
+# Why this exists: the kernel's `audio-micmute` LED trigger is bound to exactly
+# one ALSA control -- on this T16 Gen 5 that is card 1, numid=7, 'Capture
+# Switch' (see /sys/class/sound/ctl-led/mic/card*/list). PipeWire captures the
+# internal mic through a UCM path that never touches that control, so toggling
+# PipeWire's mute leaves the LED wherever the codec powered up. The codec powers
+# up with Capture Switch off and nothing in the stack ever turns it on, so the
+# light sits permanently lit, claiming the mic is off while it records fine.
+#
+# Driving both sides here keeps the LED meaning what it looks like it means.
+#
+# Usage:
+#   micmute          toggle mute, then sync the LED to the new state
+#   micmute --sync   leave mute alone, just sync the LED to the current state
+set -euo pipefail
+
+# Locate the card + control the kernel actually wired to the mic LED rather than
+# hardcoding card 1 / numid 7 -- the numbering moves with the codec.
+led_card=""
+led_numid=""
+for d in /sys/class/sound/ctl-led/mic/card*; do
+    [ -r "$d/list" ] || continue
+    ids=$(tr ' \n' '  ' < "$d/list")
+    ids=${ids%% *}
+    [ -n "$ids" ] || continue
+    led_card=${d##*/card}
+    led_numid=$ids
+    break
+done
+
+if [ "${1:-}" != "--sync" ]; then
+    pactl set-source-mute @DEFAULT_SOURCE@ toggle
+fi
+
+# No LED-bound control on this machine: the mute above is all there is to do.
+[ -n "$led_card" ] || exit 0
+
+# 'Mute: yes' / 'Mute: no'. LC_ALL=C because this box runs a French locale and
+# pactl does localise parts of its output (volumes print as "0,00 dB").
+if [ "$(LC_ALL=C pactl get-source-mute @DEFAULT_SOURCE@)" = "Mute: yes" ]; then
+    state=off  # capture switch off -> LED lit -> "your mic is muted"
+else
+    state=on
+fi
+
+amixer -c "$led_card" cset numid="$led_numid" "$state" >/dev/null
